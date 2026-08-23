@@ -1,2 +1,2 @@
-# TP1.cbuild
+# cbuild
 Sistema de Automação para Projetos em C
