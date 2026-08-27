@@ -3,7 +3,7 @@
 # podemos delegar uma função para cada pessoa, mas é importante que todos
 # saibam como o código funciona por conta da demonstração;
 
-build() {
+cbuild_build() {
     # TODO: cria diretório build e compila o projeto neste diretório;
     if [[ ! -d build ]]; then
         mkdir ./build
@@ -22,29 +22,45 @@ build() {
     fi
 }
 
-run() {
+cbuild_run() {
     # TODO: executa o projeto em build se existir;
     return 0
 }
 
-clean() {
+cbuild_clean() {
     rm -rf ./build ./log
 }
 
-rebuild() {
+cbuild_rebuild() {
     # TODO: recompila o projeto se necessário;
     return 0
 }
 
-info() {
+cbuild_info() {
     # TODO: exibir quantidade de arquivos, linhas de código, tamanho do exe
     # cutável e datas da última compilação e execução;
     return 0
 }
 
-if [[ $# -ne 1 ]]; then
-    echo "Uso: ./cbuild <comando>"
-else
-    $1
-fi
+case $1 in
+    build)
+        cbuild_build
+        ;;
+    run)
+        cbuild_run
+        ;;
+    clean)
+        cbuild_clean
+        ;;
+    rebuild)
+        cbuild_rebuild
+        ;;
+    info)
+        cbuild_info
+        ;;
+    *)
+        echo "comando não reconhecido"
+        exit 1
+        ;;
+esac
 
