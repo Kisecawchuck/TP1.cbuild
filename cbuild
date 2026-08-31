@@ -48,7 +48,7 @@ cbuild_rebuild() {
 cbuild_info() {
     # TODO: exibir quantidade de arquivos, linhas de código, tamanho do exe
     # cutável e datas da última compilação e execução;
-    local N=$(())
+    n=$(ls -1 | wc -l)
     return 0
 }
 
