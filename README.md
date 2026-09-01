@@ -29,6 +29,6 @@ bash ./cbuild
 > isso deve ser excluído para a versão final
 
 1. Sempre dê git pull antes de começar o seu trabalho para puxar os últimos commits
-2. git checkout -b <nomebranch> para criar e ir para a nova branch <nomebranch>
+2. git checkout -b "nomebranch" para criar e ir para a nova branch "nomebranch"
 3. git stash para voltar ao último commit
-4. git push origin <nomebranch> para empurrar os seus commits para o repositório, evite dar push na main
+4. git push origin "nomebranch" para empurrar os seus commits para o repositório
