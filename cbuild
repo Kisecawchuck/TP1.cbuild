@@ -3,48 +3,70 @@
 # podemos delegar uma função para cada pessoa, mas é importante que todos
 # saibam como o código funciona por conta da demonstração;
 
+# TODO: modo verboso
 cbuild_build() {
-    # TODO: cria diretório build e compila o projeto neste diretório;
-
+    # verifica se gcc está instalado
     if [[ ! $(command -v gcc) ]]; then
         echo "ERRO: GCC não está instalado"
         return 2
     fi
 
+    # verifica se build é um diretório
     if [[ ! -d build ]]; then
-        mkdir ./build
+        mkdir build
     fi
+    # verifica se log é um diretório
     if [[ ! -d log ]]; then
-        mkdir ./log
+        mkdir log
     fi
 
-    if [[ -d src ]]; then
-        SRCS="$(ls ./src/*.c)"
-    fi
-    if [[ ${#SRCS[@]} -le 0 ]]; then
+    # verifica se há código-fonte no projeto
+    if [[ ! -d src || -z $(compgen -G src/*.c) ]]; then
         echo "ERRO: não há arquivos .c no projeto"
         return 3
-    else
-        echo "$SRCS"
     fi
 
+    # transformamos cada cada arquivo código-fonte em objeto
+    SRCS="src/*.c"
+    BUILD="build"
+    for SRC in $SRCS; do
+        if [[ -e $SRC ]]; then
+            foo=${SRC##*/}
+            gcc -c $SRC -o $BUILD/${foo%.*}.o
+        fi
+    done
+
+    # fixamos o executável final em build/main
+    TARGET="${BUILD}/main"
+    OBJS="${BUILD}/*.o"
+    gcc $OBJS -o $TARGET
+
     return 0
 }
 
+# TODO: modo verboso
 cbuild_run() {
     # TODO: executa o projeto em build se existir;
+    if [[ -d ./build && -e ./build/main ]]; then
+        build/main
+    else
+        echo "ERRO: ./build/main inexistente"
+    fi
     return 0
 }
 
+# TODO: modo verboso
 cbuild_clean() {
-    rm -f ./build/* ./log/*
+    rm -f build/* log/*
 }
 
+# TODO: modo verboso
 cbuild_rebuild() {
     # TODO: recompila o projeto se necessário;
     return 0
 }
 
+# TODO: modo verboso
 cbuild_info() {
     # TODO: exibir quantidade de arquivos, linhas de código, tamanho do exe
     # cutável e datas da última compilação e execução;
