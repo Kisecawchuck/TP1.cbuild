@@ -5,6 +5,16 @@
 
 # TODO: modo verboso 
 
+# Lembrar: caso haja a utilização de flags nas funções implementadas, 
+# principalmente se cada função requisitar um número de flags 
+# diferentes, podemos chamar o comando $# que nos diz quantos argumentos
+# foram passados na linha de comando. Isso será útil para diagnosticar 
+# e evitar erros.
+
+
+# TODO: alterna entre o modo verboso e o modo debug (apenas testes, ainda vou
+# fazer modifiações).
+
 op=$2
 
 if [[ "$op" ==  "debug" ]]; then 
