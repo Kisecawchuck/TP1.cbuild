@@ -3,7 +3,25 @@
 # podemos delegar uma função para cada pessoa, mas é importante que todos
 # saibam como o código funciona por conta da demonstração;
 
-# TODO: modo verboso
+# TODO: modo verboso 
+
+op=$2
+
+if [[ "$op" ==  "debug" ]]; then 
+
+	echo "Executando no modo debug"
+	set -x
+
+elif [[ "$op" ==  "verb" ]]; then
+
+	echo "executando no modo verbodo"
+	set -v
+else
+
+	echo "Executando no modo padrão"
+fi
+
+
 cbuild_build() {
     # verifica se gcc está instalado
     if [[ ! $(command -v gcc) ]]; then
@@ -95,3 +113,9 @@ case $1 in
         exit 1
         ;;
 esac
+
+if [[ "$op" == "debug" ]]; then 
+	set +x
+elif [[ "$op" == "verboso" ]] then
+	set +v
+fi

@@ -1,0 +1,76 @@
+
+#!/bin/bash
+
+# podemos delegar uma função para cada pessoa, mas é importante que todos
+# saibam como o código funciona por conta da demonstração;
+
+cbuild_build() {
+    # TODO: cria diretório build e compila o projeto neste diretório;
+
+    if [[ ! $(command -v gcc) ]]; then
+        echo "ERRO: GCC não está instalado"
+        return 2
+    fi
+
+    if [[ ! -d build ]]; then
+        mkdir ./build
+    fi
+    if [[ ! -d log ]]; then
+        mkdir ./log
+    fi
+
+    if [[ -d src ]]; then
+        SRCS="$(ls ./src/*.c)"
+    fi
+    if [[ ${#SRCS[@]} -le 0 ]]; then
+        echo "ERRO: não há arquivos .c no projeto"
+        return 3
+    else
+        echo "$SRCS"
+    fi
+
+    return 0
+}
+
+cbuild_run() {
+    # TODO: executa o projeto em build se existir;
+    return 0
+}
+
+cbuild_clean() {
+    rm -f ./build/* ./log/*
+}
+
+cbuild_rebuild() {
+    # TODO: recompila o projeto se necessário;
+    return 0
+}
+
+cbuild_info() {
+    # TODO: exibir quantidade de arquivos, linhas de código, tamanho do exe
+    # cutável e datas da última compilação e execução;
+    n=$(ls -1 | wc -l)
+    return 0
+}
+
+case $1 in
+    build)
+        cbuild_build
+        ;;
+    run)
+        cbuild_run
+        ;;
+    clean)
+        cbuild_clean
+        ;;
+    rebuild)
+        cbuild_rebuild
+        ;;
+    info)
+        cbuild_info
+        ;;
+    *)
+        echo "ERRO: comando '$1' não reconhecido"
+        exit 1
+        ;;
+esac
