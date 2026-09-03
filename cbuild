@@ -57,7 +57,7 @@ cbuild_build() {
 }
 
 cbuild_run() {
-	# TODO: executa o projeto em build se existir;
+	# TODO: passar flags para o run;
 	if [[ -d ./build && -e ./build/main ]]; then
 		build/main
 	else
