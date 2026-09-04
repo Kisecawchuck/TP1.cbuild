@@ -16,3 +16,8 @@
 
 # Saída do LaTeX
 *.pdf
+
+# Artefatos de compilação
+build/*
+logs/*
+*.o
