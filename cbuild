@@ -22,9 +22,9 @@ cbuild_build() {
 	if [[ ! -d build ]]; then
 		mkdir build
 	fi
-	# verifica se log é um diretório
-	if [[ ! -d log ]]; then
-		mkdir log
+	# verifica se logs é um diretório
+	if [[ ! -d logs ]]; then
+		mkdir logs
 	fi
 
 	# verifica se há código-fonte no projeto
@@ -67,7 +67,7 @@ cbuild_run() {
 }
 
 cbuild_clean() {
-	rm -f build/* log/*
+	rm -f build/* logs/*
 }
 
 # TODO: modo verboso
