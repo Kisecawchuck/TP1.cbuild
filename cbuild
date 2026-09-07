@@ -11,6 +11,64 @@
 # foram passados na linha de comando. Isso será útil para diagnosticar 
 # e evitar erros.
 
+
+# Olha as flags passadas como argumentos e decidi se o modo verboso ou debug será
+# inicializado.
+
+verbose='false'
+debug='false'
+while getopts "VD" flag; do
+        case $flag in
+                V) verbose='true' ;;
+                D) debug='true' ;;
+                *)
+                        echo "Opção inesperada ${flag}"
+                        exit
+                        ;;
+        esac
+done
+
+verbose_mode() {
+	# Executa todo comando excrito após a chamada função dentro do código
+	# em modo verboso (até que set +v seja executado ou que o script termine)
+	# caso a flag -V seja passada.
+
+	if [[ $verbose = 'true' ]]; then
+	        echo "Inciando modo verboso"
+		set -v
+	fi
+}
+
+debug_mode() {
+	# Executa em modo debug todo comando chamado após a execuão dessa função
+	# (até que set +x seja executado ou qu e o script termine) caso a flag -X seja 
+	# passada.
+
+	if [[ $debug = 'true' ]]; then
+		echo "Iniciando modo debug"
+		set -x
+	fi
+}
+
+end_mode() {
+	# Termina os códigos de debug e verboso, caso tenham sido inicializados
+
+	if [[ $verbose = 'true' ]]; then
+		set +v
+
+	fi
+	if [[ $debug = 'true' ]]; then
+	        set +x
+	fi
+}
+
+# A cada chamada das funções principais, será determinado se o 
+# o modo verboso será executado ou não.
+
+if [[ $2 == "build" ]]; then 
+        verbose_mode
+fi
+
 cbuild_build() {
 	# verifica se gcc está instalado
 	if [[ ! $(command -v gcc) ]]; then
@@ -22,9 +80,9 @@ cbuild_build() {
 	if [[ ! -d build ]]; then
 		mkdir build
 	fi
-	# verifica se logs é um diretório
-	if [[ ! -d logs ]]; then
-		mkdir logs
+	# verifica se log é um diretório
+	if [[ ! -d log ]]; then
+		mkdir log
 	fi
 
 	# verifica se há código-fonte no projeto
@@ -55,6 +113,11 @@ cbuild_build() {
 
 	return 0
 }
+end_mode
+
+if [[ $2 == "run" ]]; then
+	verbose_mode
+fi
 
 cbuild_run() {
 	# TODO: passar flags para o run;
@@ -65,12 +128,23 @@ cbuild_run() {
 	fi
 	return 0
 }
+end_mode
+
+if [[ $2 == "clean" ]]; then 
+	verbose_mode
+fi
 
 cbuild_clean() {
-	rm -f build/* logs/*
+	rm -f build/* log/*
 }
+end_mode
 
 # TODO: modo verboso
+
+if [[ $2 == 'rebuild' ]]; then
+        verbose_mode
+fi
+
 cbuild_rebuild() {
 	SRCS="src/*.c"
 	BUILD="build"
@@ -101,8 +175,13 @@ cbuild_rebuild() {
 
 	return 0
 }
+end_mode
 
 # TODO: modo verboso
+if [[ $2 == 'info' ]]; then 
+        verbose_mode
+fi
+
 cbuild_info() {
 	# TODO: exibir quantidade de arquivos, linhas de código, tamanho do exe
 	# cutável e datas da última compilação e execução;
@@ -110,6 +189,7 @@ cbuild_info() {
 	return 0
 }
 
+end_mode
 
 # execução sem argumentos
 if [[ $# -lt 1 ]]; then
@@ -117,25 +197,13 @@ if [[ $# -lt 1 ]]; then
 	exit 2
 fi
 
-verbose='false'
-debug='false'
-while getopts "VD" flag; do
-	case $flag in
-		V) verbose='true' ;;
-		D) debug='true' ;;
-		*) 
-			echo "Opção inesperada ${flag}"
-			exit
-			;;
-	esac
-done
+# Executa em modo debug todo comando chamado após debu_mode, caso o modo 
+# debug tenha sido inicializado
+debug_mode
 
-if [[ $verbose = 'true' ]]; then
-	set -v
-fi
-if [[ $debug = 'true' ]]; then
-	set -x
-fi
+# Executa a chamada dos cases em modo verboso, caso o modo verboso tenha sido
+# inicializa-do
+verbose_mode
 
 for f in $@; do
 	case $f in
@@ -167,10 +235,4 @@ for f in $@; do
 			;;
 	esac
 done
-
-if [[ $verbose = 'true' ]]; then
-	set +v
-fi
-if [[ $debug = 'true' ]]; then
-	set +x
-fi
+end_mode
