@@ -11,98 +11,168 @@
 # foram passados na linha de comando. Isso será útil para diagnosticar 
 # e evitar erros.
 
+# Olha as flags passadas como argumentos e decidi se o modo verboso ou debug será
+# inicializado.
+verbose='false'
+debug='false'
+while getopts "VD" flag; do
+    case $flag in
+        V) verbose='true' ;;
+        D) debug='true' ;;
+        *)
+            echo "Opção inesperada ${flag}"
+            exit
+            ;;
+    esac
+done
+# shifta os argumentos já utilizados
+shift $((OPTIND - 1))
+
+verbose_mode() {
+    # Executa todo comando excrito após a chamada função dentro do código
+    # em modo verboso (até que set +v seja executado ou que o script termine)
+    # caso a flag -V seja passada.
+
+    if [[ $verbose = 'true' ]]; then
+        set -v
+    fi
+}
+
+debug_mode() {
+    # Executa em modo debug todo comando chamado após a execuão dessa função
+    # (até que set +x seja executado ou qu e o script termine) caso a flag -D seja 
+    # passada.
+    if [[ $debug = 'true' ]]; then
+        set -x
+    fi
+}
+
+end_mode() {
+    # termina modo verboso
+    if [[ $verbose = 'true' ]]; then
+        set +v
+    fi
+    # termina modo debug
+    if [[ $debug = 'true' ]]; then
+        set +x
+    fi
+}
+
+# A cada chamada das funções principais, será determinado se o 
+# o modo verboso será executado ou não.
+if [[ $1 = 'build' ]]; then 
+    verbose_mode
+fi
 cbuild_build() {
-	# verifica se gcc está instalado
-	if [[ ! $(command -v gcc) ]]; then
-		echo "ERRO: GCC não está instalado"
-		return 2
-	fi
+    # verifica se gcc está instalado
+    if [[ ! $(command -v gcc) ]]; then
+        echo "ERRO: GCC não está instalado"
+        return 2
+    fi
 
-	# verifica se build é um diretório
-	if [[ ! -d build ]]; then
-		mkdir build
-	fi
-	# verifica se logs é um diretório
-	if [[ ! -d logs ]]; then
-		mkdir logs
-	fi
+    # verifica se build é um diretório
+    if [[ ! -d build ]]; then
+        mkdir build
+    fi
+    # verifica se logs é um diretório
+    if [[ ! -d logs ]]; then
+        mkdir logs
+    fi
 
-	# verifica se há código-fonte no projeto
-	if [[ ! -d src || -z $(compgen -G src/*.c) ]]; then
-		echo "ERRO: não há arquivos .c no projeto"
-		return 3
-	fi
+    # verifica se há código-fonte no projeto
+    if [[ ! -d src || -z $(compgen -G src/*.c) ]]; then
+        echo "ERRO: não há arquivos .c no projeto"
+        return 3
+    fi
 
-	# transformamos cada cada arquivo código-fonte em objeto
-	SRCS="src/*.c"
-	BUILD="build"
-	for SRC in $SRCS; do
-		if [[ -e $SRC ]]; then
-			# remove a extensão .c e adiciona a extensão .o
-			OBJ=${SRC%.*}.o
-			# remove src/ e adiciona build/
-			OBJ=$BUILD/${OBJ##*/}
-			printf "$SRC:\n -o $OBJ\n"
-			gcc -c $SRC -o $OBJ
-		fi
-	done
+    # transformamos cada cada arquivo código-fonte em objeto
+    SRCS="src/*.c"
+    BUILD="build"
+    for SRC in $SRCS; do
+        if [[ -e $SRC ]]; then
+            # remove a extensão .c e adiciona a extensão .o
+            OBJ=${SRC%.*}.o
+            # remove src/ e adiciona build/
+            OBJ=$BUILD/${OBJ##*/}
+            printf "$SRC:\n -o $OBJ\n"
+            gcc -c $SRC -o $OBJ
+        fi
+    done
 
-	# fixamos o executável final em build/main
-	TARGET="${BUILD}/main"
-	OBJS="${BUILD}/*.o"
-	printf "main:\n -o $TARGET\n"
-	gcc $OBJS -o $TARGET
+    # fixamos o executável final em build/main
+    TARGET="${BUILD}/main"
+    OBJS="${BUILD}/*.o"
+    printf "main:\n -o $TARGET\n"
+    gcc $OBJS -o $TARGET
 
-	return 0
+    return 0
 }
+end_mode
 
+
+if [[ $1 = 'run' ]]; then
+    verbose_mode
+fi
 cbuild_run() {
-	# TODO: passar flags para o run;
-	if [[ -d ./build && -e ./build/main ]]; then
-		build/main
-	else
-		echo "ERRO: ./build/main inexistente"
-	fi
-	return 0
+    # TODO: passar flags para o run;
+    if [[ -d ./build && -e ./build/main ]]; then
+        build/main
+    else
+        echo "ERRO: ./build/main inexistente"
+    fi
+    return 0
 }
+end_mode
 
+
+if [[ $1 = 'clean' ]]; then 
+    verbose_mode
+fi
 cbuild_clean() {
-	rm -f build/* logs/*
+    rm -f build/* logs/*
 }
+end_mode
 
-# TODO: modo verboso
+
+if [[ $1 = 'rebuild' ]]; then
+    verbose_mode
+fi
 cbuild_rebuild() {
-	SRCS="src/*.c"
-	BUILD="build"
-	TARGET="$BUILD/main"
-	OBJS="${BUILD}/*.o"
+    SRCS="src/*.c"
+    BUILD="build"
+    TARGET="$BUILD/main"
+    OBJS="${BUILD}/*.o"
 
-	ch=false
-	for SRC in $SRCS; do
-		# remove a extensão .c e adiciona .o
-		OBJ=${SRC%.*}.o
-		# remove src/ e adiciona build/
-		OBJ=$BUILD/${OBJ##*/}
+    ch='false'
+    for SRC in $SRCS; do
+        # remove a extensão .c e adiciona .o
+        OBJ=${SRC%.*}.o
+        # remove src/ e adiciona build/
+        OBJ=$BUILD/${OBJ##*/}
+        # compara o timestamp de cada arquivo fonte com o seu objeto,
+        # se o código-fonte é mais novo que o objeto, houve uma alteração
+        # após a compilação;
+        if [[ $SRC -nt $OBJ ]]; then
+            printf "$SRC:\n -o $OBJ\n"
+            gcc -c $SRC -o $OBJ
+            ch='true'
+        fi
+    done
 
-		# compara o timestamp de cada arquivo fonte com o seu objeto
-		if [[ $(date -r $SRC "+%s") -gt $(date -r $OBJ "+%s") ]]; then
-			printf "$SRC:\n -o $OBJ\n"
-			gcc -c $SRC -o $OBJ
-			ch=true
-		fi
-	done
+    # só recompilar a main se houve mudança
+    if [[ $ch == 'true' ]]; then 
+        printf "main:\n -o $TARGET\n"
+        # fixamos o executável final em build/main
+        gcc $OBJS -o $TARGET
+    fi
 
-	# só recompilar a main se houve mudança
-	if [[ $ch ==  true ]]; then 
-		printf "main:\n -o $TARGET\n"
-		# fixamos o executável final em build/main
-		gcc $OBJS -o $TARGET
-	fi
-
-	return 0
+    return 0
 }
+end_mode
 
-# TODO: modo verboso
+if [[ $1 = 'info' ]]; then 
+    verbose_mode
+fi
 cbuild_info() {
 	echo "=== Informações e Estatísticas do Projeto ==="
 
@@ -134,68 +204,48 @@ cbuild_info() {
 	local total_linhas=$((linhas_c + linhas_h))
 	echo "Total de linhas de código (src + include): $total_linhas"
 }
+end_mode
 
+# Executa em modo debug todo comando chamado após debu_mode, caso o modo 
+# debug tenha sido inicializado
+debug_mode
+
+# Executa a chamada dos cases em modo verboso, caso o modo verboso tenha sido
+# inicializa-do
+verbose_mode
 
 # execução sem argumentos
 if [[ $# -lt 1 ]]; then
-	echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info}"
-	exit 2
-fi
-
-verbose='false'
-debug='false'
-while getopts "VD" flag; do
-	case $flag in
-		V) verbose='true' ;;
-		D) debug='true' ;;
-		*) 
-			echo "Opção inesperada ${flag}"
-			exit
-			;;
-	esac
-done
-
-if [[ $verbose = 'true' ]]; then
-	set -v
-fi
-if [[ $debug = 'true' ]]; then
-	set -x
+    echo "Uso: cbuild [OPÇÃO...] [build | run | clean | rebuild | info]"
+    exit 2
 fi
 
 for f in $@; do
-	case $f in
-		build)
-			cbuild_build
-			exit $? 
-			;;
-		run)
-			cbuild_run
-			exit $? 
-			;;
-		clean)
-			cbuild_clean
-			exit $? 
-			;;
-		rebuild)
-			cbuild_rebuild
-			exit $?
-			;;
-		info)
-			cbuild_info
-			exit $? 
-			;;
-		-*)
-			;;
-		*)
-			echo "ERRO: comando '$f' não reconhecido"
-			exit 1 
-			;;
-	esac
+    case $f in
+        build)
+            cbuild_build
+            exit $? 
+            ;;
+        run)
+            cbuild_run
+            exit $? 
+            ;;
+        clean)
+            cbuild_clean
+            exit $? 
+            ;;
+        rebuild)
+            cbuild_rebuild
+            exit $?
+            ;;
+        info)
+            cbuild_info
+            exit $? 
+            ;;
+        *)
+            echo "ERRO: comando '$f' não reconhecido"
+            exit 1 
+            ;;
+    esac
 done
-
-if [[ $verbose = 'true' ]]; then
-	set +v
-fi
-if [[ $debug = 'true' ]]; then
-	set +x
-fi
+end_mode
