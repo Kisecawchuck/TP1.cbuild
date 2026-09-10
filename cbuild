@@ -32,33 +32,32 @@ shift $((OPTIND - 1))
 
 verbose_mode() {
     # Executa todo comando excrito após a chamada função dentro do código
-    # em modo verboso (até que set +ev seja executado ou que o script termine)
-    # caso a flag -V seja passada. Caso ocorra algum erro durante a execução, 
-    # ela é interrompida.
+    # em modo verboso (até que set +v seja executado ou que o script termine)
+    # caso a flag -V seja passada.
 
     if [[ $verbose = 'true' ]]; then
-        set -ev
+        set -v
     fi
 }
 
 debug_mode() {
     # Executa em modo debug todo comando chamado após a execuão dessa função
-    # (até que set +ex seja executado ou qu e o script termine) caso a flag -D seja 
-    # passada. Caso ocorra algum erro durante a execução, ela é interrompida.
+    # (até que set +x seja executado ou qu e o script termine) caso a flag -D seja 
+    # passada.
 
     if [[ $debug = 'true' ]]; then
-        set -ex
+        set -x
     fi
 }
 
 end_mode() {
     # termina modo verboso
     if [[ $verbose = 'true' ]]; then
-        set +ev
+        set +v
     fi
     # termina modo debug
     if [[ $debug = 'true' ]]; then
-        set +ex
+        set +x
     fi
 }
 
@@ -89,7 +88,7 @@ cbuild_build() {
         return 3
     fi
 
-    # transformamos cada cada arquivo código-fonte em objeto
+    # transformamos cada arquivo código-fonte em objeto
     local SRCS="src/*.c"
     local BUILD="build"
     for SRC in $SRCS; do
