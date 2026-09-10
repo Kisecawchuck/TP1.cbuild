@@ -1,0 +1,183 @@
+#!/bin/bash
+
+verbose='false'
+debug='false'
+run_args=''
+while getopts "VDr:" flag; do
+	case $flag in
+		V) verbose='true' ;;
+		D) debug='true' ;;
+        r) run_args="$OPTARG" ;;
+		*) 
+			echo "Opção inesperada ${flag}"
+			exit
+			;;
+	esac
+done
+
+# shiftar os argumentos já usados
+shift $(($OPTIND - 1))
+
+if [[ $verbose = 'true' ]]; then
+	set -v
+fi
+if [[ $debug = 'true' ]]; then
+	set -x
+fi
+
+# podemos delegar uma função para cada pessoa, mas é importante que todos
+# saibam como o código funciona por conta da demonstração;
+
+# TODO: modo verboso 
+
+# Lembrar: caso haja a utilização de flags nas funções implementadas, 
+# principalmente se cada função requisitar um número de flags 
+# diferentes, podemos chamar o comando $# que nos diz quantos argumentos
+# foram passados na linha de comando. Isso será útil para diagnosticar 
+# e evitar erros.
+
+cbuild_build() {
+	# verifica se gcc está instalado
+	if [[ ! $(command -v gcc) ]]; then
+		echo "ERRO: GCC não está instalado"
+		return 2
+	fi
+
+	# verifica se build é um diretório
+	if [[ ! -d build ]]; then
+		mkdir build
+	fi
+	# verifica se logs é um diretório
+	if [[ ! -d logs ]]; then
+		mkdir logs
+	fi
+
+	# verifica se há código-fonte no projeto
+	if [[ ! -d src || -z $(compgen -G src/*.c) ]]; then
+		echo "ERRO: não há arquivos .c no projeto"
+		return 3
+	fi
+
+	# transformamos cada cada arquivo código-fonte em objeto
+	SRCS="src/*.c"
+	BUILD="build"
+	for SRC in $SRCS; do
+		if [[ -e $SRC ]]; then
+			# remove a extensão .c e adiciona a extensão .o
+			OBJ=${SRC%.*}.o
+			# remove src/ e adiciona build/
+			OBJ=$BUILD/${OBJ##*/}
+			printf "$SRC:\n -o $OBJ\n"
+			gcc -c $SRC -o $OBJ
+		fi
+	done
+
+	# fixamos o executável final em build/main
+	TARGET="${BUILD}/main"
+	OBJS="${BUILD}/*.o"
+	printf "main:\n -o $TARGET\n"
+	gcc $OBJS -o $TARGET
+
+    if [[ $1 = 'true' ]]; then
+        set -v
+    fi
+	return 0
+}
+
+cbuild_run() {
+	# TODO: passar flags para o run;
+	if [[ -d ./build && -e ./build/main ]]; then
+		build/main $@
+	else
+		echo "ERRO: ./build/main inexistente"
+	fi
+	return 0
+}
+
+cbuild_clean() {
+	rm -f build/* logs/*
+}
+
+# TODO: modo verboso
+cbuild_rebuild() {
+	SRCS="src/*.c"
+	BUILD="build"
+	TARGET="$BUILD/main"
+	OBJS="${BUILD}/*.o"
+
+	ch=false
+	for SRC in $SRCS; do
+		# remove a extensão .c e adiciona .o
+		OBJ=${SRC%.*}.o
+		# remove src/ e adiciona build/
+		OBJ=$BUILD/${OBJ##*/}
+
+		# compara o timestamp de cada arquivo fonte com o seu objeto
+		if [[ $SRC -nt $OBJ ]]; then
+			printf "$SRC:\n -o $OBJ\n"
+			gcc -c $SRC -o $OBJ
+			ch=true
+		fi
+	done
+
+	# só recompilar a main se houve mudança
+	if [[ $ch ==  true ]]; then 
+		printf "main:\n -o $TARGET\n"
+		# fixamos o executável final em build/main
+		gcc $OBJS -o $TARGET
+	fi
+
+	return 0
+}
+
+# TODO: modo verboso
+cbuild_info() {
+	# TODO: exibir quantidade de arquivos, linhas de código, tamanho do exe
+	# cutável e datas da última compilação e execução;
+	n=$(ls -1 | wc -l)
+	return 0
+}
+
+
+# execução sem argumentos
+if [[ $# -lt 1 ]]; then
+	echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info}"
+	exit 2
+fi
+
+
+for f in $@; do
+	case $f in
+		build)
+			cbuild_build $verbose
+			exit $? 
+			;;
+		run)
+			cbuild_run $run_args
+			exit $? 
+			;;
+		clean)
+			cbuild_clean
+			exit $? 
+			;;
+		rebuild)
+			cbuild_rebuild
+			exit $?
+			;;
+		info)
+			cbuild_info
+			exit $? 
+			;;
+		*)
+			echo "ERRO: comando '$f' não reconhecido"
+			exit 1 
+			;;
+	esac
+done
+
+if [[ $verbose = 'true' ]]; then
+	set +v
+fi
+if [[ $debug = 'true' ]]; then
+	set +x
+fi
