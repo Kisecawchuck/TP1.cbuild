@@ -15,10 +15,12 @@
 # inicializado.
 verbose='false'
 debug='false'
-while getopts "VD" flag; do
+run_args=''
+while getopts "VDr:" flag; do
     case $flag in
         V) verbose='true' ;;
         D) debug='true' ;;
+        r) run_args="${OPTARG}" ;;
         *)
             echo "Opção inesperada ${flag}"
             exit
@@ -88,8 +90,8 @@ cbuild_build() {
     fi
 
     # transformamos cada cada arquivo código-fonte em objeto
-    SRCS="src/*.c"
-    BUILD="build"
+    local SRCS="src/*.c"
+    local BUILD="build"
     for SRC in $SRCS; do
         if [[ -e $SRC ]]; then
             # remove a extensão .c e adiciona a extensão .o
@@ -102,8 +104,8 @@ cbuild_build() {
     done
 
     # fixamos o executável final em build/main
-    TARGET="${BUILD}/main"
-    OBJS="${BUILD}/*.o"
+    local TARGET="${BUILD}/main"
+    local OBJS="${BUILD}/*.o"
     printf "main:\n -o $TARGET\n"
     gcc $OBJS -o $TARGET
 
@@ -116,9 +118,8 @@ if [[ $1 = 'run' ]]; then
     verbose_mode
 fi
 cbuild_run() {
-    # TODO: passar flags para o run;
     if [[ -d ./build && -e ./build/main ]]; then
-        build/main
+        build/main $run_args
     else
         echo "ERRO: ./build/main inexistente"
     fi
@@ -140,12 +141,12 @@ if [[ $1 = 'rebuild' ]]; then
     verbose_mode
 fi
 cbuild_rebuild() {
-    SRCS="src/*.c"
-    BUILD="build"
-    TARGET="$BUILD/main"
-    OBJS="${BUILD}/*.o"
+    local SRCS="src/*.c"
+    local BUILD="build"
+    local TARGET="$BUILD/main"
+    local OBJS="${BUILD}/*.o"
 
-    ch='false'
+    local ch='false'
     for SRC in $SRCS; do
         # remove a extensão .c e adiciona .o
         OBJ=${SRC%.*}.o
@@ -162,7 +163,7 @@ cbuild_rebuild() {
     done
 
     # só recompilar a main se houve mudança
-    if [[ $ch == 'true' ]]; then 
+    if [[ $ch = 'true' ]]; then 
         printf "main:\n -o $TARGET\n"
         # fixamos o executável final em build/main
         gcc $OBJS -o $TARGET
@@ -176,35 +177,35 @@ if [[ $1 = 'info' ]]; then
     verbose_mode
 fi
 cbuild_info() {
-	echo "=== Informações e Estatísticas do Projeto ==="
+    echo "=== Informações e Estatísticas do Projeto ==="
 
-	# Conta arquivos .c e .h
-	# O find procura no src arquivos regulares que terminam com .c (2>/dev/null serve para descartar mensagens de erro)
-	# | wc -l conta as linhas (nesse caso quantos arquivos o find encontrou
-	# qnt_c vai receber a saidá disso tudo, e não os comnado.
-	# qnt_h é análogo ao qnt_c 
-        local qtd_c=$(find src -type f -name "*.c" 2>/dev/null | wc -l)
-	local qtd_h=$(find include -type f -name "*.h" 2>/dev/null | wc -l)
-	echo "Arquivos fonte (.c): $qtd_c"
-    	echo "Arquivos de cabeçalho (.h): $qtd_h"
+    # Conta arquivos .c e .h
+    # O find procura no src arquivos regulares que terminam com .c (2>/dev/null serve para descartar mensagens de erro)
+    # | wc -l conta as linhas (nesse caso quantos arquivos o find encontrou
+    # qnt_c vai receber a saidá disso tudo, e não os comnado.
+    # qnt_h é análogo ao qnt_c 
+    local qtd_c=$(find src -type f -name "*.c" 2>/dev/null | wc -l)
+    local qtd_h=$(find include -type f -name "*.h" 2>/dev/null | wc -l)
+    echo "Arquivos fonte (.c): $qtd_c"
+    echo "Arquivos de cabeçalho (.h): $qtd_h"
 
-	# Contagem de Linhas de Código em arquivos .c e .h
-    	local linhas_c=0
-    	local linhas_h=0
+    # Contagem de Linhas de Código em arquivos .c e .h
+    local linhas_c=0
+    local linhas_h=0
 
-	if [ $qtd_c -gt 0 ]; then
-        	# -exec executa o comando cat e os coloca tudo em único lugar {}
-		# o + faz com que executemos o cat apenas uma única vez em todos os arquviso que estão no {}
-		linhas_c=$(find src -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
-    	fi
+    if [ $qtd_c -gt 0 ]; then
+        # -exec executa o comando cat e os coloca tudo em único lugar {}
+        # o + faz com que executemos o cat apenas uma única vez em todos os arquviso que estão no {}
+        linhas_c=$(find src -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
+    fi
 
-	if [ $qtd_h -gt 0 ]; then
-		# Análogo a linhas_c
-		linhas_h=$(find include -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
-	fi
+    if [ $qtd_h -gt 0 ]; then
+        # Análogo a linhas_c
+        linhas_h=$(find include -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
+    fi
 
-	local total_linhas=$((linhas_c + linhas_h))
-	echo "Total de linhas de código (src + include): $total_linhas"
+    local total_linhas=$((linhas_c + linhas_h))
+    echo "Total de linhas de código (src + include): $total_linhas"
 }
 end_mode
 
