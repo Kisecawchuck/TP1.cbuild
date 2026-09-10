@@ -11,7 +11,7 @@
 # foram passados na linha de comando. Isso será útil para diagnosticar 
 # e evitar erros.
 
-# Olha as flags passadas como argumentos e decidi se o modo verboso ou debug será
+# Olha as flags passadas como argumentos e decide se o modo verboso ou debug será
 # inicializado.
 verbose='false'
 debug='false'
@@ -30,31 +30,33 @@ shift $((OPTIND - 1))
 
 verbose_mode() {
     # Executa todo comando excrito após a chamada função dentro do código
-    # em modo verboso (até que set +v seja executado ou que o script termine)
-    # caso a flag -V seja passada.
+    # em modo verboso (até que set +ev seja executado ou que o script termine)
+    # caso a flag -V seja passada. Caso ocorra algum erro durante a execução, 
+    # ela é interrompida.
 
     if [[ $verbose = 'true' ]]; then
-        set -v
+        set -ev
     fi
 }
 
 debug_mode() {
     # Executa em modo debug todo comando chamado após a execuão dessa função
-    # (até que set +x seja executado ou qu e o script termine) caso a flag -D seja 
-    # passada.
+    # (até que set +ex seja executado ou qu e o script termine) caso a flag -D seja 
+    # passada. Caso ocorra algum erro durante a execução, ela é interrompida.
+
     if [[ $debug = 'true' ]]; then
-        set -x
+        set -ex
     fi
 }
 
 end_mode() {
     # termina modo verboso
     if [[ $verbose = 'true' ]]; then
-        set +v
+        set +ev
     fi
     # termina modo debug
     if [[ $debug = 'true' ]]; then
-        set +x
+        set +ex
     fi
 }
 
