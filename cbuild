@@ -13,6 +13,8 @@
 
 # Olha as flags passadas como argumentos e decide se o modo verboso ou debug será
 # inicializado.
+
+# Guarda o horário de incio da execução em segundos e nanosegundos
 verbose='false'
 debug='false'
 run_args=''
@@ -133,7 +135,11 @@ if [[ $1 = 'clean' ]]; then
     verbose_mode
 fi
 cbuild_clean() {
-    rm -f build/* logs/*
+    	echo "Apagando os seguintes arquivos:"
+	echo "Pasta logs: $(ls logs)"
+	
+	echo "Pasta build: $(ls build)$"
+	rm -f build/* logs/*
 }
 end_mode
 
@@ -188,9 +194,67 @@ end_mode
 	fi
 	local total_linhas=$((linhas_c + linhas_h))
 
-	TARGET="build/main"
-	local tamanho="Indisponível (não compilado)"
-	local data_compilacao="Indisponível"
+
+gerar_logs(){
+	
+	nome_func="$1"
+	nome_log="cbuild_$(date '+%d-%m-%Y_%H-%M-%S').txt"
+	
+	echo "Execução em $(date '+%d/%m/%Y') ás $(date '+%H:%M:%S')" > "$nome_log"
+	echo "Comando Executado: $1 " >> "$nome_log"
+	echo "Saída da execução: " >> "$nome_log"
+	
+	# Sem o descritor 3 redirecionado para &2, 
+	# o rastro de set -x, com descritor padrão stderr(descritor 2), 
+	# seria direcionado para o log na execução do comando com o tee
+	# isso faria com que tudo o que fosse impresso no modo debug aparecesse 
+	# na saída do nosso comando dentro do log. Para evitar isso, o descritor 3
+	# redireciona a saída do set -x diretamente apenas para o stderr do próprio shell
+	# fazendo que a saída do set -x apareça apenas no terminal e não no log
+
+	exec 3>&2
+	#Saída padrão do set -x
+	BASH_XTRACEFD=3
+	
+	inicio=$(date +%s.%N)
+	#incializa o modo debug
+	debug_mode
+	
+	# Executa o comando e guarda sua saída ou seus erros dentro de um log
+	"$nome_func" 2>&1 | tee -a "$nome_log"
+	
+	# encerra o modo debug
+	end_mode
+	
+	fim=$(date +%s.%N)
+	
+	# Como o descritor 3 não será mais usado, podemos descartá-lo
+	exec 3>&-
+	
+	# Tiramos a diferença entre o inicio do horário de sexecução
+	# e do horário de fim da execução  para calcular o tempo 
+	# total de execução
+	
+	tempo_real=$( echo "$fim - $inicio" | bc)
+	
+	# Para números menorres que 0.5, o bc pode retorná-los sem o 0 da 
+	# primeria posição, por isso colocamos ele aqui
+	if [[ "$tempo_real" == .* ]]; then 
+		tempo_real="0$tempo_real"
+	fi
+	
+	# Define o formato para números decimais usarem .
+	# isso é importante pois o printf pode apresentar erros caso 
+	# usemos um número decimal com , da formatação %.4f
+	LC_NUMERIC=C printf -v tempo_real "%.4f" "$tempo_real"
+
+	# Salva o tempo de execução do comando dentro de logs
+	echo "Tempo Real de execução: ${tempo_real} s" >> "$nome_log"
+	mv "$nome_log" logs
+}
+
+# Executa em modo debug todo comando chamado após debu_mode, caso o modo 
+# debug tenha sido inicializado
 
 	if [[ -f "$TARGET" ]]; then
 		tamanho=$(du -h "$TARGET" | cut -f1)
@@ -270,23 +334,23 @@ fi
 for f in $@; do
     case $f in
         build)
-            cbuild_build
-            exit $? 
+            gerar_logs cbuild_build
+            exit $?
             ;;
         run)
-            cbuild_run
+            gerar_logs cbuild_run
             exit $? 
             ;;
         clean)
-            cbuild_clean
+            gerar_logs cbuild_clean
             exit $? 
             ;;
         rebuild)
-            cbuild_rebuild
+            gerar_logs cbuild_rebuild
             exit $?
             ;;
         info)
-            cbuild_info
+            gerar_logs cbuild_info
             exit $? 
             ;;
         *)
@@ -296,3 +360,6 @@ for f in $@; do
     esac
 done
 end_mode
+
+# Guarda o horário de fim da execução em segundos e nanosegundos
+exit 0
