@@ -1,34 +1,60 @@
-# cbuild
+# cbuild - Sistema de Automação para Projetos em C
 
-Sistema de Automação para Projetos em C
+O **cbuild** é uma ferramenta de linha de comando desenvolvida em Shell Script (Bash) para automatizar tarefas comuns em projetos escritos em C, como compilação, execução, limpeza e geração de relatórios.
 
-## Requisitos
+## ⚙️ Pré-requisitos
+Para executar esta ferramenta, você precisará de:
+* Ambiente Linux (nativo ou WSL).
+* Interpretador `bash`.
+* Compilador `gcc` instalado no sistema.
 
-> Para começar:
-> - bash
-> - um projeto C em /projeto/muito/legal/em/c
+## 📁 Estrutura de Diretórios
+O seu projeto em C deve estar organizado da seguinte forma:
+\`\`\`text
+projeto/
+├── src/          # Arquivos fonte (.c)
+├── include/      # Arquivos de cabeçalho (.h)
+├── build/        # (Gerado automaticamente) Executável e objetos
+├── logs/         # (Gerado automaticamente) Histórico de execuções
+└── relatorios/   # (Gerado automaticamente) Relatórios do projeto
+\`\`\`
 
-```bash
-# clone o repositório
-git clone https://github.com/Kisecawchuck/TP1.cbuild.git
-cd TP1.cbuild
+## 🚀 Como Executar
+Antes do primeiro uso, voce deve dar permissão de execução ao script:
+\`\`\`bash
+chmod +x cbuild
+\`\`\`
 
-# copie cbuild para o seu projeto em C
-cp ./cbuild /projeto/muito/legal/em/c
-cd /projeto/muito/legal/em/c
-```
+Par usar, voce deve usar a seguinte sintaxe:
+\`\`\`bash
+./cbuild [OPÇÕES...] <comando>
+\`\`\`
 
-## Uso
+## 🛠️ Comandos Disponíveis
 
-```bash
-bash ./cbuild
-```
+* \`build\`: Descobre os arquivos fonte nas pastas \`src/\` e \`include/\`, compila o projeto usando o GCC e gera o executável na pasta \`build/\`.
+* \`run\`: Executa o programa gerado após a compilação.
+* \`clean\`: Remove o executável e todos os arquivos temporários gerados.
+* \`rebuild\`: Executa a limpeza (\`clean\`) seguida de uma nova compilação (\`build\`).
+* \`info\`: Exibe estatísticas do projeto (quantidade de arquivos, total de linhas de código, tamanho do executável, datas de modificação) e gera um relatório detalhado na pasta \`relatorios/\`.
 
-## Dicas de git
+## ⚙️ Opções (Flags)
+* \`-V\`: **Modo Verboso.** Imprime no terminal as linhas do script à medida que são lidas, detalhando a execução.
+* \`-D\`: **Modo Debug.** Exibe os comandos e seus argumentos à medida que são executados (útil para diagnóstico de falhas).
 
-> isso deve ser excluído para a versão final
+## 💡 Exemplos de Uso
 
-1. Sempre dê git pull antes de começar o seu trabalho para puxar os últimos commits
-2. git checkout -b "nomebranch" para criar e ir para a nova branch "nomebranch"
-3. git stash para voltar ao último commit
-4. git push origin "nomebranch" para empurrar os seus commits para o repositório
+Compilando o projeto normalmente:
+\`\`\`bash
+./cbuild build
+\`\`\`
+
+Limpando o projeto e executando em modo verboso:
+\`\`\`bash
+./cbuild -V clean
+\`\`\`
+
+Gerando o relatório e visualizando as estatísticas do código:
+\`\`\`bash
+./cbuild info
+\`\`\`

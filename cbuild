@@ -17,10 +17,12 @@
 # Guarda o horário de incio da execução em segundos e nanosegundos
 verbose='false'
 debug='false'
-while getopts "VD" flag; do
+run_args=''
+while getopts "VDr:" flag; do
     case $flag in
         V) verbose='true' ;;
         D) debug='true' ;;
+        r) run_args="${OPTARG}" ;;
         *)
             echo "Opção inesperada ${flag}"
             exit
@@ -32,33 +34,32 @@ shift $((OPTIND - 1))
 
 verbose_mode() {
     # Executa todo comando excrito após a chamada função dentro do código
-    # em modo verboso (até que set +ev seja executado ou que o script termine)
-    # caso a flag -V seja passada. Caso ocorra algum erro durante a execução, 
-    # ela é interrompida.
+    # em modo verboso (até que set +v seja executado ou que o script termine)
+    # caso a flag -V seja passada.
 
     if [[ $verbose = 'true' ]]; then
-        set -ev
+        set -v
     fi
 }
 
 debug_mode() {
     # Executa em modo debug todo comando chamado após a execuão dessa função
-    # (até que set +ex seja executado ou qu e o script termine) caso a flag -D seja 
-    # passada. Caso ocorra algum erro durante a execução, ela é interrompida.
+    # (até que set +x seja executado ou qu e o script termine) caso a flag -D seja 
+    # passada.
 
     if [[ $debug = 'true' ]]; then
-        set -ex
+        set -x
     fi
 }
 
 end_mode() {
     # termina modo verboso
     if [[ $verbose = 'true' ]]; then
-        set +ev
+        set +v
     fi
     # termina modo debug
     if [[ $debug = 'true' ]]; then
-        set +ex
+        set +x
     fi
 }
 
@@ -89,9 +90,9 @@ cbuild_build() {
         return 3
     fi
 
-    # transformamos cada cada arquivo código-fonte em objeto
-    SRCS="src/*.c"
-    BUILD="build"
+    # transformamos cada arquivo código-fonte em objeto
+    local SRCS="src/*.c"
+    local BUILD="build"
     for SRC in $SRCS; do
         if [[ -e $SRC ]]; then
             # remove a extensão .c e adiciona a extensão .o
@@ -104,8 +105,8 @@ cbuild_build() {
     done
 
     # fixamos o executável final em build/main
-    TARGET="${BUILD}/main"
-    OBJS="${BUILD}/*.o"
+    local TARGET="${BUILD}/main"
+    local OBJS="${BUILD}/*.o"
     printf "main:\n -o $TARGET\n"
     gcc $OBJS -o $TARGET
 
@@ -118,9 +119,10 @@ if [[ $1 = 'run' ]]; then
     verbose_mode
 fi
 cbuild_run() {
-    # TODO: passar flags para o run;
+	touch build/.last_run
+
     if [[ -d ./build && -e ./build/main ]]; then
-        build/main
+        build/main $run_args
     else
         echo "ERRO: ./build/main inexistente"
     fi
@@ -146,12 +148,12 @@ if [[ $1 = 'rebuild' ]]; then
     verbose_mode
 fi
 cbuild_rebuild() {
-    SRCS="src/*.c"
-    BUILD="build"
-    TARGET="$BUILD/main"
-    OBJS="${BUILD}/*.o"
+    local SRCS="src/*.c"
+    local BUILD="build"
+    local TARGET="$BUILD/main"
+    local OBJS="${BUILD}/*.o"
 
-    ch='false'
+    local ch='false'
     for SRC in $SRCS; do
         # remove a extensão .c e adiciona .o
         OBJ=${SRC%.*}.o
@@ -168,7 +170,7 @@ cbuild_rebuild() {
     done
 
     # só recompilar a main se houve mudança
-    if [[ $ch == 'true' ]]; then 
+    if [[ $ch = 'true' ]]; then 
         printf "main:\n -o $TARGET\n"
         # fixamos o executável final em build/main
         gcc $OBJS -o $TARGET
@@ -178,41 +180,19 @@ cbuild_rebuild() {
 }
 end_mode
 
-if [[ $1 = 'info' ]]; then 
-    verbose_mode
-fi
-cbuild_info() {
-	echo "=== Informações e Estatísticas do Projeto ==="
-
-	# Conta arquivos .c e .h
-	# O find procura no src arquivos regulares que terminam com .c (2>/dev/null serve para descartar mensagens de erro)
-	# | wc -l conta as linhas (nesse caso quantos arquivos o find encontrou
-	# qnt_c vai receber a saidá disso tudo, e não os comnado.
-	# qnt_h é análogo ao qnt_c 
-        local qtd_c=$(find src -type f -name "*.c" 2>/dev/null | wc -l)
-	local qtd_h=$(find include -type f -name "*.h" 2>/dev/null | wc -l)
-	echo "Arquivos fonte (.c): $qtd_c"
-    	echo "Arquivos de cabeçalho (.h): $qtd_h"
-
-	# Contagem de Linhas de Código em arquivos .c e .h
-    	local linhas_c=0
-    	local linhas_h=0
+	# Coleta de Dados
+	local qtd_c=$(find src -name "*.c" 2>/dev/null | wc -l)
+	local qtd_h=$(find include -name "*.h" 2>/dev/null | wc -l)
+	local linhas_c=0
+	local linhas_h=0
 
 	if [ $qtd_c -gt 0 ]; then
-        	# -exec executa o comando cat e os coloca tudo em único lugar {}
-		# o + faz com que executemos o cat apenas uma única vez em todos os arquviso que estão no {}
 		linhas_c=$(find src -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
-    	fi
-
+	fi
 	if [ $qtd_h -gt 0 ]; then
-		# Análogo a linhas_c
 		linhas_h=$(find include -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
 	fi
-
 	local total_linhas=$((linhas_c + linhas_h))
-	echo "Total de linhas de código (src + include): $total_linhas"
-}
-end_mode
 
 
 gerar_logs(){
@@ -276,14 +256,79 @@ gerar_logs(){
 # Executa em modo debug todo comando chamado após debu_mode, caso o modo 
 # debug tenha sido inicializado
 
-# Executa a chamada dos cases em modo verboso, caso o modo verboso tenha sido
-# inicializa-do
-verbose_mode
+	if [[ -f "$TARGET" ]]; then
+		tamanho=$(du -h "$TARGET" | cut -f1)
+		data_compilacao=$(date -r "$TARGET" "+%d/%m/%Y %H:%M:%S")
+	fi
+
+	local data_execucao="Indisponível"
+	if [[ -f "build/.last_run" ]]; then
+		data_execucao=$(date -r "build/.last_run" "+%d/%m/%Y %H:%M:%S")
+	fi
+
+	# Exibição na Tela (Terminal)
+	echo "Arquivos fonte (.c): $qtd_c"
+	echo "Arquivos de cabeçalho (.h): $qtd_h"
+	echo "Total de linhas de código: $total_linhas"
+	echo "Tamanho do executável: $tamanho"
+	echo "Última compilação: $data_compilacao"
+	echo "Última execução: $data_execucao"
+	echo "---------------------------------------------"
+
+	# Geração do Relatório (Arquivo)
+	if [[ ! -d relatorios ]]; then
+		mkdir relatorios
+	fi
+
+	local arquivo_relatorio="relatorios/relatorio_$(date +%Y%m%d_%H%M%S).txt"
+
+	{
+		echo "========================================"
+		echo "       RELATÓRIO DO PROJETO C           "
+		echo "========================================"
+		echo "Data do relatório: $(date "+%d/%m/%Y %H:%M:%S")"
+		echo ""
+		echo "--- ESTATÍSTICAS DOS ARQUIVOS ---"
+		echo "Arquivos fonte (.c): $qtd_c"
+		echo "Arquivos de cabeçalho (.h): $qtd_h"
+		echo "Total de linhas de código: $total_linhas"
+		echo ""
+		echo "--- INFORMAÇÕES DE COMPILAÇÃO ---"
+		echo "Tamanho do executável: $tamanho"
+		echo "Última compilação: $data_compilacao"
+		echo "Última execução: $data_execucao"
+		echo "========================================"
+	} > "$arquivo_relatorio"
+
+	echo ">> Relatório detalhado gerado com sucesso em: $arquivo_relatorio"
+
+	return 0
+}
 
 # execução sem argumentos
 if [[ $# -lt 1 ]]; then
-    echo "Uso: cbuild [OPÇÃO...] [build | run | clean | rebuild | info]"
-    exit 2
+	echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info }"
+	exit 2
+fi
+
+verbose='false'
+debug='false'
+while getopts "VD" flag; do
+	case $flag in
+		V) verbose='true' ;;
+		D) debug='true' ;;
+		*) 
+			echo "Opção inesperada ${flag}"
+			exit
+			;;
+	esac
+done
+
+if [[ $verbose = 'true' ]]; then
+	set -v
+fi
+if [[ $debug = 'true' ]]; then
+	set -x
 fi
 
 for f in $@; do
