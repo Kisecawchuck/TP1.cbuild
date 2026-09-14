@@ -8,8 +8,8 @@ Para executar esta ferramenta, você precisará de:
 * Interpretador `bash`.
 * Compilador `gcc` instalado no sistema.
 
-## 📁 Estrutura de Diretórios Esperada
-A ferramenta espera que o seu projeto em C esteja organizado da seguinte forma:
+## 📁 Estrutura de Diretórios
+O seu projeto em C deve estar organizado da seguinte forma:
 \`\`\`text
 projeto/
 ├── src/          # Arquivos fonte (.c)
