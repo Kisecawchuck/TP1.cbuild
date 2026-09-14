@@ -117,27 +117,14 @@ if [[ $1 = 'run' ]]; then
     verbose_mode
 fi
 cbuild_run() {
-<<<<<<< Updated upstream
+	touch build/.last_run
+
     if [[ -d ./build && -e ./build/main ]]; then
         build/main $run_args
     else
         echo "ERRO: ./build/main inexistente"
     fi
     return 0
-=======
-	# TODO: passar flags para o run;
-
-	# Toda vez que chamamos a cbuild_run, criamos um .last_run
-	# para que possamos saber a data da ultima execução na info
-	touch build/.last_run
-
-	if [[ -d ./build && -e ./build/main ]]; then
-		build/main
-	else
-		echo "ERRO: ./build/main inexistente"
-	fi
-	return 0
->>>>>>> Stashed changes
 }
 end_mode
 
@@ -187,96 +174,6 @@ cbuild_rebuild() {
 }
 end_mode
 
-<<<<<<< Updated upstream
-if [[ $1 = 'info' ]]; then 
-    verbose_mode
-fi
-
-cbuild_info() {
-	echo "=== Informações e Estatísticas do Projeto ==="
-
-	# Coleta de Dados
-	local qtd_c=$(find src -name "*.c" 2>/dev/null | wc -l)
-	local qtd_h=$(find include -name "*.h" 2>/dev/null | wc -l)
-	local linhas_c=0
-	local linhas_h=0
-
-	if [ $qtd_c -gt 0 ]; then
-		linhas_c=$(find src -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
-	fi
-	if [ $qtd_h -gt 0 ]; then
-		linhas_h=$(find include -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
-	fi
-	local total_linhas=$((linhas_c + linhas_h))
-
-	TARGET="build/main"
-	local tamanho="Indisponível (não compilado)"
-	local data_compilacao="Indisponível"
-
-	if [[ -f "$TARGET" ]]; then
-		tamanho=$(du -h "$TARGET" | cut -f1)
-		data_compilacao=$(date -r "$TARGET" "+%d/%m/%Y %H:%M:%S")
-	fi
-
-	local data_execucao="Indisponível"
-	if [[ -f "build/.last_run" ]]; then
-		data_execucao=$(date -r "build/.last_run" "+%d/%m/%Y %H:%M:%S")
-	fi
-
-	# Exibição na Tela
-	echo "Arquivos fonte (.c): $qtd_c"
-	echo "Arquivos de cabeçalho (.h): $qtd_h"
-	echo "Total de linhas de código: $total_linhas"
-	echo "Tamanho do executável: $tamanho"
-	echo "Última compilação: $data_compilacao"
-	echo "Última execução: $data_execucao"
-	echo "---------------------------------------------"
-
-	# Geração do Relatório
-	if [[ ! -d relatorios ]]; then
-		mkdir relatorios
-	fi
-
-	local arquivo_relatorio="relatorios/relatorio_$(date +%Y%m%d_%H%M%S).txt"
-
-	{
-		echo "========================================"
-		echo "       RELATÓRIO DO PROJETO C           "
-		echo "========================================"
-		echo "Data do relatório: $(date "+%d/%m/%Y %H:%M:%S")"
-		echo ""
-		echo "--- ESTATÍSTICAS DOS ARQUIVOS ---"
-		echo "Arquivos fonte (.c): $qtd_c"
-		echo "Arquivos de cabeçalho (.h): $qtd_h"
-		echo "Total de linhas de código: $total_linhas"
-		echo ""
-		echo "--- INFORMAÇÕES DE COMPILAÇÃO ---"
-		echo "Tamanho do executável: $tamanho"
-		echo "Última compilação: $data_compilacao"
-		echo "Última execução: $data_execucao"
-		echo "========================================"
-	} > "$arquivo_relatorio"
-
-	echo ">> Relatório detalhado gerado com sucesso em: $arquivo_relatorio"
-
-	return 0
-}
-
-end_mode
-
-# Executa em modo debug todo comando chamado após debu_mode, caso o modo 
-# debug tenha sido inicializado
-debug_mode
-
-# Executa a chamada dos cases em modo verboso, caso o modo verboso tenha sido
-# inicializa-do
-verbose_mode
-
-# execução sem argumentos
-if [[ $# -lt 1 ]]; then
-    echo "Uso: cbuild [OPÇÃO...] [build | run | clean | rebuild | info]"
-    exit 2
-=======
 	# Coleta de Dados
 	local qtd_c=$(find src -name "*.c" 2>/dev/null | wc -l)
 	local qtd_h=$(find include -name "*.h" 2>/dev/null | wc -l)
@@ -368,7 +265,6 @@ if [[ $verbose = 'true' ]]; then
 fi
 if [[ $debug = 'true' ]]; then
 	set -x
->>>>>>> Stashed changes
 fi
 
 for f in $@; do
