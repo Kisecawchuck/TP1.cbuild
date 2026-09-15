@@ -68,6 +68,7 @@ end_mode() {
 if [[ $1 = 'build' ]]; then 
     verbose_mode
 fi
+
 cbuild_build() {
     # verifica se gcc está instalado
     if [[ ! $(command -v gcc) ]]; then
@@ -137,7 +138,7 @@ fi
 cbuild_clean() {
     	echo "Apagando os seguintes arquivos:"
 	echo "Pasta logs: $(ls logs)"
-	
+
 	echo "Pasta build: $(ls build)$"
 	rm -f build/* logs/*
 }
@@ -180,30 +181,13 @@ cbuild_rebuild() {
 }
 end_mode
 
-	# Coleta de Dados
-	local qtd_c=$(find src -name "*.c" 2>/dev/null | wc -l)
-	local qtd_h=$(find include -name "*.h" 2>/dev/null | wc -l)
-	local linhas_c=0
-	local linhas_h=0
-
-	if [ $qtd_c -gt 0 ]; then
-		linhas_c=$(find src -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
-	fi
-	if [ $qtd_h -gt 0 ]; then
-		linhas_h=$(find include -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
-	fi
-	local total_linhas=$((linhas_c + linhas_h))
-
 
 gerar_logs(){
-	
-	nome_func="$1"
-	nome_log="cbuild_$(date '+%d-%m-%Y_%H-%M-%S').txt"
-	
-	echo "Execução em $(date '+%d/%m/%Y') ás $(date '+%H:%M:%S')" > "$nome_log"
-	echo "Comando Executado: $1 " >> "$nome_log"
-	echo "Saída da execução: " >> "$nome_log"
-	
+	data_hora=$(date '+%d-%m-%Y_%H-%M-%S')
+	nome_log="cbuild_$data_hora.txt"
+	echo '' > "$nome_log"
+	comando_exec=$1
+
 	# Sem o descritor 3 redirecionado para &2, 
 	# o rastro de set -x, com descritor padrão stderr(descritor 2), 
 	# seria direcionado para o log na execução do comando com o tee
@@ -221,8 +205,8 @@ gerar_logs(){
 	debug_mode
 	
 	# Executa o comando e guarda sua saída ou seus erros dentro de um log
-	"$nome_func" 2>&1 | tee -a "$nome_log"
-	
+	"$comando_exec" 2>&1 | tee -a "temp_log.txt"
+
 	# encerra o modo debug
 	end_mode
 	
@@ -230,31 +214,67 @@ gerar_logs(){
 	
 	# Como o descritor 3 não será mais usado, podemos descartá-lo
 	exec 3>&-
-	
+
+	saida_comando=$(cat "temp_log.txt")
+	codigo_retorno=$?
+	status="SUCESSO"
+
+	if [[ $codigo_retorno -eq 1 ]]; then
+		status="FALHA"
+	fi
 	# Tiramos a diferença entre o inicio do horário de sexecução
 	# e do horário de fim da execução  para calcular o tempo 
 	# total de execução
-	
 	tempo_real=$( echo "$fim - $inicio" | bc)
-	
+
 	# Para números menorres que 0.5, o bc pode retorná-los sem o 0 da 
 	# primeria posição, por isso colocamos ele aqui
 	if [[ "$tempo_real" == .* ]]; then 
 		tempo_real="0$tempo_real"
 	fi
-	
+
 	# Define o formato para números decimais usarem .
 	# isso é importante pois o printf pode apresentar erros caso 
 	# usemos um número decimal com , da formatação %.4f
 	LC_NUMERIC=C printf -v tempo_real "%.4f" "$tempo_real"
 
 	# Salva o tempo de execução do comando dentro de logs
-	echo "Tempo Real de execução: ${tempo_real} s" >> "$nome_log"
+	{
+	echo "==========================================================="
+    	echo "DATA/HORA DE EXECUÇÃO : $data_hora"
+    	echo "COMANDO EXECUTADO : $comando_exec"
+    	echo "TEMPO DE EXECUÇÃO : ${tempo_real}s"
+    	echo "CÓDIGO DE RETORNO : $codigo_retorno"
+    	echo "STATUS            : $status"
+    	echo "-----------------------------------------------------------"
+    	echo "SAÍDA DE CÓDIGO DE RETORNO/ERRO  (stdout/stderr):"
+	echo "$saida_comando"
+    	echo "==========================================================="
+	echo ""
+	} >>  "$nome_log"
+
 	mv "$nome_log" logs
+	rm -f "temp_log.txt"
 }
 
-# Executa em modo debug todo comando chamado após debu_mode, caso o modo 
-# debug tenha sido inicializado
+
+if [[ $1 = 'info' ]]; then 
+    verbose_mode
+fi
+cbuild_info(){
+	# Coleta de Dados
+	local qtd_c=$(find src -name "*.c" 2>/dev/null | wc -l)
+	local qtd_h=$(find include -name "*.h" 2>/dev/null | wc -l)
+	local linhas_c=0
+	local linhas_h=0
+
+	if [ $qtd_c -gt 0 ]; then
+		linhas_c=$(find src -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
+	fi
+	if [ $qtd_h -gt 0 ]; then
+		linhas_h=$(find include -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
+	fi
+	local total_linhas=$((linhas_c + linhas_h))
 
 	if [[ -f "$TARGET" ]]; then
 		tamanho=$(du -h "$TARGET" | cut -f1)
@@ -304,6 +324,8 @@ gerar_logs(){
 
 	return 0
 }
+end_mode
+
 
 # execução sem argumentos
 if [[ $# -lt 1 ]]; then
@@ -311,26 +333,15 @@ if [[ $# -lt 1 ]]; then
 	exit 2
 fi
 
-verbose='false'
-debug='false'
-while getopts "VD" flag; do
-	case $flag in
-		V) verbose='true' ;;
-		D) debug='true' ;;
-		*) 
-			echo "Opção inesperada ${flag}"
-			exit
-			;;
-	esac
-done
+#Executa em modo debug todo comando chamado após debu_mode, caso o modo 
+# debug tenha sido inicializado
+debug_mode
 
-if [[ $verbose = 'true' ]]; then
-	set -v
-fi
-if [[ $debug = 'true' ]]; then
-	set -x
-fi
+# Executa a chamada dos cases em modo verboso, caso o modo verboso tenha sido
+# inicializa-do
+verbose_mode
 
+	
 for f in $@; do
     case $f in
         build)
