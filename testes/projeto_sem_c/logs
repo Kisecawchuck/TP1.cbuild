@@ -1,0 +1,12 @@
+
+===========================================================
+DATA/HORA DE EXECUÇÃO : 15-09-2026_08-40-04
+COMANDO EXECUTADO : cbuild_run
+TEMPO DE EXECUÇÃO : 0.0281s
+CÓDIGO DE RETORNO : 0
+STATUS            : SUCESSO
+-----------------------------------------------------------
+SAÍDA DE CÓDIGO DE RETORNO/ERRO  (stdout/stderr):
+ERRO: ./build/main inexistente
+===========================================================
+
