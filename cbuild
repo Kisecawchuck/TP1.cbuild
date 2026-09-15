@@ -136,10 +136,26 @@ if [[ $1 = 'clean' ]]; then
     verbose_mode
 fi
 cbuild_clean() {
-    	echo "Apagando os seguintes arquivos:"
-	echo "Pasta logs: $(ls logs)"
 
-	echo "Pasta build: $(ls build)$"
+	arquivos_log=$(ls logs | sort )
+	arquivos_build=$( ls build | sort)
+
+	echo "====================================="
+	echo "Apagando os seguintes arquivos:"
+
+	echo "Pasta logs: $(ls build | sort)$"
+	for i in ${arquivos_log[@]}; do
+	echo "- $i"
+	done
+
+	echo " "
+
+	echo "Pasta build: $(ls build | sort)$"
+	for j in ${arquivos_build[@]}; do
+	echo "- $j"
+	done
+
+	echo "====================================="
 	rm -f build/* logs/*
 }
 end_mode

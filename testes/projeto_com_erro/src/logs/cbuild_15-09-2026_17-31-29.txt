@@ -1,13 +1,12 @@
 
 ===========================================================
-DATA/HORA DE EXECUÇÃO : 15-09-2026_08-15-29
+DATA/HORA DE EXECUÇÃO : 15-09-2026_17-31-29
 COMANDO EXECUTADO : cbuild_build
-TEMPO DE EXECUÇÃO : 0.0326s
+TEMPO DE EXECUÇÃO : 0.0056s
 CÓDIGO DE RETORNO : 0
 STATUS            : SUCESSO
 -----------------------------------------------------------
 SAÍDA DE CÓDIGO DE RETORNO/ERRO  (stdout/stderr):
-mkdir: logs: File exists
 ERRO: não há arquivos .c no projeto
 ===========================================================
 

@@ -1,0 +1,12 @@
+
+===========================================================
+DATA/HORA DE EXECUÇÃO : 15-09-2026_17-59-23
+COMANDO EXECUTADO : cbuild_build
+TEMPO DE EXECUÇÃO : 0.0072s
+CÓDIGO DE RETORNO : 0
+STATUS            : SUCESSO
+-----------------------------------------------------------
+SAÍDA DE CÓDIGO DE RETORNO/ERRO  (stdout/stderr):
+ERRO: não há arquivos .c no projeto
+===========================================================
+
