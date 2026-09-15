@@ -143,16 +143,16 @@ cbuild_clean() {
 	echo "====================================="
 	echo "Apagando os seguintes arquivos:"
 
-	echo "Pasta logs: $(ls build | sort)$"
+	echo "Pasta logs: "
 	for i in ${arquivos_log[@]}; do
-	echo "- $i"
+		echo "- $i"
 	done
 
 	echo " "
 
-	echo "Pasta build: $(ls build | sort)$"
+	echo "Pasta build: "
 	for j in ${arquivos_build[@]}; do
-	echo "- $j"
+		echo "- $j"
 	done
 
 	echo "====================================="
