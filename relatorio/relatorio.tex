@@ -11,7 +11,12 @@
 \linespread{1.1}
 
 \title{MAC0216 --- Técnicas de Programação\\Relatório Técnico do Trabalho Prático 1}
-\author{Ezequiel Carvalho, Igor Silva, Lucas, Miguel Damasceno}
+\author{
+    Ezequiel Gomes de Carvalho - NUSP \\
+    Igor Nascimento Silva - NUSP \\
+    Lucas Pires da Silva - NUSP \\
+    Miguel da Silva Damasceno - NUSP
+}
 \date{\textit{\small{\today}}}
 
 \begin{document}
@@ -19,8 +24,20 @@
 \maketitle
 
 \section{Introdução}
+A construção do Cbuild - Uma ferramenta de automatização para projetos em c - foi o foco desse trabalho, feito em script (Bash) com conceitos de versionamento de código, moduralização lógica através de funções e tratametnos de erros.
 
 \section{Estrutura}
+A ferraemnta foi feita em um único arquivo, com todos os seus comportamentos divididos em funções. O seu uso é feito atraves da linha de comando do Bash.
+
+\section{Arquitetura}
+A arquitetura do script é composta por três camadas principais:
+\begin{enumerate}
+    \item \textbf{Camada de Configuração (Flags):}
+    \item \textbf{Camada de Módulos (Funções):}
+    \item \textbf{Camada de Roteamento (Case):}
+\end{enumerate}
+
+Essa decisão de projeto nos ajudou no desenvolvimento, pois consegumos delegar cada camada para 1 ou 2 integrantes e trabalharmos separademtne em cada camada, onde um erro não interferia no desenvolvimento do ouro sub-grupo.
 
 \subsection{build}
 
