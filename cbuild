@@ -276,6 +276,9 @@ cbuild_info(){
 	fi
 	local total_linhas=$((linhas_c + linhas_h))
 
+	local tamanho="Indisponível"
+	local data_compilacao="Indisponível"
+
 	if [[ -f "$TARGET" ]]; then
 		tamanho=$(du -h "$TARGET" | cut -f1)
 		data_compilacao=$(date -r "$TARGET" "+%d/%m/%Y %H:%M:%S")
