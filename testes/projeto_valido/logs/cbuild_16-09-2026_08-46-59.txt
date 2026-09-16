@@ -1,0 +1,17 @@
+
+===========================================================
+DATA/HORA DE EXECUÇÃO : 16-09-2026_08-46-59
+COMANDO EXECUTADO : cbuild_rebuild
+TEMPO DE EXECUÇÃO : 0.4020s
+CÓDIGO DE RETORNO : 0
+STATUS            : SUCESSO
+-----------------------------------------------------------
+SAÍDA DE CÓDIGO DE RETORNO/ERRO  (stdout/stderr):
+src/main.c:
+ -o build/main.o
+src/saudacao.c:
+ -o build/saudacao.o
+main:
+ -o build/main
+===========================================================
+

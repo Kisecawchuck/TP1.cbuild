@@ -1,24 +1,22 @@
 
 ===========================================================
-DATA/HORA DE EXECUÇÃO : 15-09-2026_18-04-44
+DATA/HORA DE EXECUÇÃO : 16-09-2026_08-46-51
 COMANDO EXECUTADO : cbuild_clean
-TEMPO DE EXECUÇÃO : 0.0158s
+TEMPO DE EXECUÇÃO : 0.1099s
 CÓDIGO DE RETORNO : 0
 STATUS            : SUCESSO
 -----------------------------------------------------------
 SAÍDA DE CÓDIGO DE RETORNO/ERRO  (stdout/stderr):
 =====================================
 Apagando os seguintes arquivos:
-Pasta logs: main
-main.o
-saudacao.o$
-- cbuild_15-09-2026_18-00-11.txt
-- cbuild_15-09-2026_18-01-38.txt
-- cbuild_15-09-2026_18-03-57.txt
+Pasta logs: 
+- cbuild_15-09-2026_18-04-44.txt
+- cbuild_16-09-2026_08-46-14.txt
+- cbuild_16-09-2026_08-46-19.txt
+- cbuild_16-09-2026_08-46-24.txt
+- cbuild_16-09-2026_08-46-45.txt
  
-Pasta build: main
-main.o
-saudacao.o$
+Pasta build: 
 - main
 - main.o
 - saudacao.o

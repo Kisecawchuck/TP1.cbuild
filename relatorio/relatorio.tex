@@ -12,10 +12,10 @@
 
 \title{MAC0216 --- Técnicas de Programação\\Relatório Técnico do Trabalho Prático 1}
 \author{
-    Ezequiel Gomes de Carvalho - NUSP \\
-    Igor Nascimento Silva - NUSP \\
-    Lucas Pires da Silva - NUSP \\
-    Miguel da Silva Damasceno - NUSP
+    Ezequiel Gomes de Carvalho - 15510880 \\
+    Igor Nascimento Silva - 17076671 \\
+    Lucas Pires da Silva - 16885060 \\
+    Miguel da Silva Damasceno - 17838677
 }
 \date{\textit{\small{\today}}}
 
@@ -32,21 +32,151 @@ A ferraemnta foi feita em um único arquivo, com todos os seus comportamentos di
 \section{Arquitetura}
 A arquitetura do script é composta por três camadas principais:
 \begin{enumerate}
-    \item \textbf{Camada de Configuração (Flags):}
-    \item \textbf{Camada de Módulos (Funções):}
-    \item \textbf{Camada de Roteamento (Case):}
+    \item \textbf{Camada de Configuração (Flags)}
+    \item \textbf{Camada de Módulos (Funções)}
+    \item \textbf{Camada de Roteamento (Case)}
 \end{enumerate}
 
 Essa decisão de projeto nos ajudou no desenvolvimento, pois consegumos delegar cada camada para 1 ou 2 integrantes e trabalharmos separademtne em cada camada, onde um erro não interferia no desenvolvimento do ouro sub-grupo.
 
 \subsection{build}
+O comando \texttt{build} é o núcleo de compilação da ferramenta. Antes de iniciar o processo, a função realiza uma série de verificações de segurança (tratamento de erros): checa se o compilador \texttt{gcc} está instalado no sistema e se o diretório \texttt{src/} contém arquivos de código-fonte válidos. Caso essas condições não sejam atendidas, o script é interrompido com um código de erro específico.
+
+A estratégia de descoberta de arquivos de forma recursiva  sobre todos os arquivos de origem. Cada arquivo \texttt{.c} é compilado individualmente para um arquivo objeto \texttt{.o} dentro do diretório \texttt{build/}.
 
 \subsection{run}
+A função \texttt{run} é responsável pela execução do projeto. Ela inicialmente verifica a existência do diretório \texttt{build/} e do executável \texttt{main}. Caso o projeto não tenha sido compilado previamente, a execução é abortada com uma mensagem de erro . Se a validação for bem-sucedida, o binário é executado.
 
 \subsection{clean}
+O comando \texttt{clean} atua na manutenção do ambiente de desenvolvimento. Sua implementação consiste na remoção forçada e silenciosa (\texttt{rm -f}) de todos os artefatos de compilação contidos no diretório \texttt{build/} e dos arquivos temporários no diretório \texttt{logs/}, garantindo que a próxima compilação ocorra do zero.
 
 \subsection{rebuild}
+A função \texttt{rebuild} implementa o mecanismo de \textbf{compilação incremental}. Em vez de recompilar todo o projeto cegamente, o script compara o \textit{timestamp} de modificação de cada arquivo fonte (\texttt{.c}) com o seu respectivo arquivo objeto (\texttt{.o}). Utilizando o comando \texttt{date -r <arquivo> "+\%s"}, obtemos a data em formato \textit{Epoch}. Se o código-fonte possuir um \textit{timestamp} superior ao do objeto, ou se o objeto não existir, o arquivo é recompilado. Caso contrário, ele é ignorado. Ao final, a linkagem do executável principal só é refeita se pelo menos um arquivo objeto tiver sido atualizado.
 
 \subsection{info}
+O comando \texttt{info} coleta e exibe metadados vitais do projeto. A estratégia de contagem de arquivos e das Linhas de Código utiliza os comandos \texttt{find} acoplados ao utilário \texttt{wc -l}. O script processa de forma recursiva os diretórios \texttt{src/} e \texttt{include/}, lidando de forma segura com diretórios vazios. 
+
+Além das estatísticas de código, a função obtém o tamanho em disco do executável utilizando \texttt{du -h} e extrai as datas da última compilação (via \textit{timestamp} do binário) e da última execução (através de um arquivo de controle gerado no momento do \texttt{run}). Todos esses dados são exibidos na saída padrão e exportados para um arquivo texto consolidado dentro da pasta \texttt{relatorios/}.
+
+\section{Modos verbose e debug}
+
+Para implementação dos modos de execução \textit{verbose} e \textit{debug}, utilizamos um loop com \texttt{getopts} para decidir quais métodos serão ativados com base nas flags passadas como argumento (\texttt{-D} para debug e \texttt{-V} para verbose).
+
+\begin{verbatim}
+verbose='false'
+debug='false'
+run_args=''
+while getopts "VDr:" flag; do
+    case $flag in
+        V) verbose='true' ;;
+        D) debug='true' ;;
+        r) run_args="${OPTARG}" ;;
+        *)
+            echo "Opção inesperada ${flag}"
+            exit
+            ;;
+    esac
+done
+\end{verbatim}
+
+\subsection*{\texttt{verbose\_mode()}}
+
+Função responsável por inicializar o modo verbose. Ela executa todo comando escrito depois dela dentro do script, até que \texttt{set +v} seja chamado.
+
+\subsection*{\texttt{debug\_mode()}}
+
+Função responsável por inicializar o modo debug. Ela executa todo comando chamado depois dela dentro da execução do script, não necessariamente escrito abaixo dela, até que \texttt{set +x} seja chamado.
+
+\subsection*{\texttt{end\_mode()}}
+
+Função responsável por encerrar os modos debug e verbose.
+
+A cada chamada dos comandos principais \texttt{build}, \texttt{rebuild}, \texttt{clean}, \texttt{run} e \texttt{info}, colocamos um condicional que, com base na verificação das flags feita anteriormente, executa esse comando em modo verbose.
+
+Logo antes da parte do código que decide quais comandos serão executados com base nos argumentos passados na execução, inicializamos o modo verbose para execução desse trecho do código. Também inicializamos o modo debug nessa parte para que tudo que seja chamado posteriormente seja executado em modo debug.
+
+Logo após cada comando, chamamos a função que encerra os modos debug e verbose, para evitar que outros comandos não chamados sejam executados em modo verbose.
+
+\section{Geração de logs}
+
+\subsection*{Função \texttt{gerar\_logs()}}
+
+Cria um arquivo de log da última execução do script, contendo as seguintes informações:
+
+\begin{itemize}
+    \item Data/horário de execução;
+    \item Código de retorno;
+    \item Saída do comando executado;
+    \item Comando executado;
+    \item Tempo de execução;
+    \item Status da execução.
+\end{itemize}
+
+\subsection*{Pontos importantes sobre as decisões de projeto}
+
+A variável padrão \texttt{BASH\_XTRACEFD} diz para qual descritor será direcionada a saída de \texttt{set -x}.
+
+Com o comando \texttt{exec}, podemos redirecionar a saída do descritor criado 3 diretamente para a saída 2 (\texttt{stderr}) do terminal. Sem o descritor 3 redirecionado para \texttt{\&2}, o rastro de \texttt{set -x}, com descritor padrão \texttt{stderr} (descritor 2), seria direcionado para o log na execução do comando com o \texttt{tee}. Isso faria com que tudo o que fosse impresso no modo debug aparecesse na saída do nosso comando dentro do log. Para evitar isso, direcionamos a saída do \texttt{set -x} para o descritor 3, que por sua vez redireciona essa saída diretamente para o \texttt{stderr} do próprio terminal, fazendo com que a saída do \texttt{set -x} apareça apenas no terminal e não no log.
+
+\begin{verbatim}
+exec 3>&2
+BASH_XTRACEFD=3
+\end{verbatim}
+
+\begin{verbatim}
+exec 3>&-
+\end{verbatim}
+
+Encerra o descritor 3, pois ele não será mais usado.
+
+\begin{verbatim}
+"$comando_exec" 2>&1 | tee -a "temp_log.txt"
+\end{verbatim}
+
+Executa o comando \texttt{comando\_exec} e redireciona sua saída para dois canais: um para a saída padrão no terminal e outro para o arquivo \texttt{temp\_log.txt}.
+
+\begin{verbatim}
+inicio=$(date +%s.%N)
+fim=$(date +%s.%N)
+\end{verbatim}
+
+Para calcular o tempo de execução, tiramos a diferença entre o horário de início e o horário de fim da execução, calculando assim o tempo total de execução.
+
+\begin{verbatim}
+tempo_real=$(echo "$fim - $inicio" | bc)
+\end{verbatim}
+
+Para números menores que 0.5, o \texttt{bc} pode retorná-los sem o 0 da primeira posição; por isso, tratamos esse caso:
+
+\begin{verbatim}
+if [[ "$tempo_real" == .* ]]; then
+  tempo_real="0$tempo_real"
+fi
+\end{verbatim}
+
+\begin{verbatim}
+LC_NUMERIC=C printf -v tempo_real "%.4f" "$tempo_real"
+\end{verbatim}
+
+Para salvar o tempo com um certo formato, é preciso tratar a representação de números decimais, trocando a vírgula por um ponto como separador decimal. Isso é importante pois o \texttt{printf} pode apresentar erros caso o número decimal use vírgula na formatação \texttt{\%.4f}.
+
+\begin{verbatim}
+rm -f "temp_log.txt"
+\end{verbatim}
+
+O arquivo temporário usado para salvar a saída do comando é excluído após seu uso.
+
+\section{Dificuldades Encontradas}
+Durante o desenvolvimento, algumas dificuldades técnicas apareceram. tivemos algumas dificuldades com o escopo de variáveis no Bash, especialmente quando se trata de caminhos de diretórios entre funções. Além disso,  a implementação correta da compilação incremental, que demandou testes cuidadosos para garantir que as comparações ocorressem sem falhas mesmo quando os arquivos objetos ainda não haviam sido criados no primeiro \texttt{build}.
+
+\section{Resultados Obtidos}
+O \texttt{cbuild} foi capaz de realizar todos os requesitos do trabalho. A estrutura em camadas foi extremamente últil para a organização e versionamento do projeto.
+
+\section{Melhorias Futuras}
+para melhor vizualação do usuário, seria de extrema importância os seguintes incrementos:
+\begin{itemize}
+    \item \textbf{Suporte a múltiplas linguagens:} Expandir a descoberta de arquivos para compilar também arquivos \texttt{.cpp} (C++), automatizando a troca entre \texttt{gcc} e \texttt{g++}.
+    \item \textbf{Cores no Terminal:} Adicionar códigos ANSI no sistema de *logs* e \textit{stdout} para diferenciar visualmente avisos, mensagens de sucesso e erros críticos.
+\end{itemize}
 
 \end{document}

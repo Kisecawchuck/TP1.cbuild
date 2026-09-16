@@ -294,6 +294,7 @@ cbuild_info(){
 
 	local tamanho="Indisponível"
 	local data_compilacao="Indisponível"
+	local TARGET="build/main"
 
 	if [[ -f "$TARGET" ]]; then
 		tamanho=$(du -h "$TARGET" | cut -f1)
