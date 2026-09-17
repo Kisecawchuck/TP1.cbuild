@@ -19,5 +19,5 @@
 
 # Artefatos de compilação
 **/build/
-**/logs/*
+**/logs/
 *.o

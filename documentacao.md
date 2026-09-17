@@ -19,7 +19,7 @@ Compila os arquivos-fonte em objetos e depois compila o executável principal. O
 
 Roda o executável principal.
 
-- `-r`: passa argumentos para a execução do programa executado 
+- `-r`: passa `ARGS` para os argumentos do programa principal
 
 ## clean
 

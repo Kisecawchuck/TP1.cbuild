@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # lê arquivo de configuração
-source cbuild.conf
+if [[ -e cbuild.conf ]]; then
+    source cbuild.conf
+fi
 
 # CONTANSTES GLOBAIS
 BUILD_DIR="$CBUILD_PATH/build"
@@ -82,7 +84,7 @@ cbuild_build() {
     fi
 
     # verifica se há código-fonte no projeto
-    if [[ ! -d src || -z $SRCS ]]; then
+    if [[ ! -d $SRC_DIR || -z $SRCS ]]; then
         echo "ERRO: não há arquivos .c no projeto"
         return 3
     fi
@@ -101,7 +103,7 @@ cbuild_build() {
 
     # gera o executável principal
     local OBJS="${BUILD_DIR}/*.o"
-    printf "main:\n -o ${BUILD_DIR}/${TARGET}\n"
+    printf "main:\n $CFLAGS -o ${BUILD_DIR}/${TARGET}\n"
     $CC $CFLAGS $OBJS -o ${BUILD_DIR}/${TARGET}
 
     return 0
@@ -171,7 +173,7 @@ cbuild_rebuild() {
         # se o código-fonte é mais novo que o objeto, houve uma alteração
         # após a compilação;
         if [[ $SRC -nt $OBJ ]]; then
-            printf "$SRC:\n -o $OBJ\n"
+            printf "$SRC:\n $CFLAGS -o $OBJ\n"
             $CC $CFLAGS -c $SRC -o $OBJ
             ch='true'
         fi
@@ -179,7 +181,7 @@ cbuild_rebuild() {
 
     # só recompilar a main se houve mudança
     if [[ $ch = 'true' ]]; then 
-        printf "main:\n -o $BUILD_DIR/$TARGET\n"
+        printf "main:\n $CFLAGS -o $BUILD_DIR/$TARGET\n"
         # fixamos o executável final em build/main
         $CC $CFLAGS $OBJS -o $BUILD_DIR/$TARGET
     fi
