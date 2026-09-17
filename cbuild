@@ -315,32 +315,7 @@ cbuild_info(){
 	echo "Última execução: $data_execucao"
 	echo "---------------------------------------------"
 
-	# Geração do Relatório (Arquivo)
-	if [[ ! -d relatorios ]]; then
-		mkdir relatorios
-	fi
-
-	local arquivo_relatorio="relatorios/relatorio_$(date +%Y%m%d_%H%M%S).txt"
-
-	{
-		echo "========================================"
-		echo "       RELATÓRIO DO PROJETO C           "
-		echo "========================================"
-		echo "Data do relatório: $(date "+%d/%m/%Y %H:%M:%S")"
-		echo ""
-		echo "--- ESTATÍSTICAS DOS ARQUIVOS ---"
-		echo "Arquivos fonte (.c): $qtd_c"
-		echo "Arquivos de cabeçalho (.h): $qtd_h"
-		echo "Total de linhas de código: $total_linhas"
-		echo ""
-		echo "--- INFORMAÇÕES DE COMPILAÇÃO ---"
-		echo "Tamanho do executável: $tamanho"
-		echo "Última compilação: $data_compilacao"
-		echo "Última execução: $data_execucao"
-		echo "========================================"
-	} > "$arquivo_relatorio"
-
-	echo ">> Relatório detalhado gerado com sucesso em: $arquivo_relatorio"
+	echo ">> Relatório detalhado gerado com sucesso"
 
 	return 0
 }
