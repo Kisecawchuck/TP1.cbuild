@@ -5,7 +5,7 @@ if [[ -e cbuild.conf ]]; then
     source cbuild.conf
 fi
 
-# CONTANSTES GLOBAIS
+# CONSTANTES GLOBAIS
 BUILD_DIR="$CBUILD_PATH/build"
 LOGS_DIR="$CBUILD_PATH/logs"
 SRC_DIR="$CBUILD_PATH/src"
