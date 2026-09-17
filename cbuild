@@ -9,7 +9,7 @@ fi
 BUILD_DIR="$CBUILD_PATH/build"
 LOGS_DIR="$CBUILD_PATH/logs"
 SRC_DIR="$CBUILD_PATH/src"
-SRCS=$(find $SRC_DIR -name "*.c")
+SRCS=$(find $SRC_DIR -name "*.c" 2> /dev/null)
 
 # Olha as flags passadas como argumentos e decide se o modo verboso ou debug será
 # inicializado.
@@ -96,7 +96,7 @@ cbuild_build() {
             OBJ=${SRC%.*}.o
             # remove src/ e adiciona build/
             OBJ=${BUILD_DIR}/${OBJ##*/}
-            printf "$SRC:\n -o $OBJ\n"
+            printf "$SRC:\n $CFLAGS -o $OBJ\n"
             $CC $CFLAGS -c $SRC -o $OBJ
         fi
     done
@@ -272,13 +272,13 @@ if [[ $1 = 'info' ]]; then
 fi
 cbuild_info() {
 	# Coleta de Dados
-	local qtd_c=$(find src -name "*.c" 2>/dev/null | wc -l)
+	local qtd_c=$(find $SRC_DIR -name "*.c" 2>/dev/null | wc -l)
 	local qtd_h=$(find include -name "*.h" 2>/dev/null | wc -l)
 	local linhas_c=0
 	local linhas_h=0
 
 	if [ $qtd_c -gt 0 ]; then
-		linhas_c=$(find src -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
+		linhas_c=$(find $SRC_DIR -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
 	fi
 	if [ $qtd_h -gt 0 ]; then
 		linhas_h=$(find include -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
