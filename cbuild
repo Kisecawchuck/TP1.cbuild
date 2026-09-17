@@ -1,20 +1,16 @@
 #!/bin/bash
 
-# podemos delegar uma função para cada pessoa, mas é importante que todos
-# saibam como o código funciona por conta da demonstração;
+# lê arquivo de configuração
+source cbuild.conf
 
-# TODO: modo verboso 
-
-# Lembrar: caso haja a utilização de flags nas funções implementadas, 
-# principalmente se cada função requisitar um número de flags 
-# diferentes, podemos chamar o comando $# que nos diz quantos argumentos
-# foram passados na linha de comando. Isso será útil para diagnosticar 
-# e evitar erros.
+# CONTANSTES GLOBAIS
+BUILD_DIR="$CBUILD_PATH/build"
+LOGS_DIR="$CBUILD_PATH/logs"
+SRC_DIR="$CBUILD_PATH/src"
+SRCS=$(find $SRC_DIR -name "*.c")
 
 # Olha as flags passadas como argumentos e decide se o modo verboso ou debug será
 # inicializado.
-
-# Guarda o horário de incio da execução em segundos e nanosegundos
 verbose='false'
 debug='false'
 run_args=''
@@ -70,46 +66,43 @@ if [[ $1 = 'build' ]]; then
 fi
 
 cbuild_build() {
-    # verifica se gcc está instalado
-    if [[ ! $(command -v gcc) ]]; then
-        echo "ERRO: GCC não está instalado"
+    # verifica se $CC está instalado
+    if [[ ! $(command -v $CC) ]]; then
+        echo "ERRO: $CC não está instalado"
         return 2
     fi
 
     # verifica se build é um diretório
-    if [[ ! -d build ]]; then
-        mkdir build
+    if [[ ! -d $BUILD_DIR ]]; then
+        mkdir $BUILD_DIR
     fi
     # verifica se logs é um diretório
-    if [[ ! -d logs ]]; then
-        mkdir logs
+    if [[ ! -d $LOGS_DIR ]]; then
+        mkdir $LOGS_DIR
     fi
 
     # verifica se há código-fonte no projeto
-    if [[ ! -d src || -z $(compgen -G src/*.c) ]]; then
+    if [[ ! -d src || -z $SRCS ]]; then
         echo "ERRO: não há arquivos .c no projeto"
         return 3
     fi
 
     # transformamos cada arquivo código-fonte em objeto
-    local SRCS="src/*.c"
-    local BUILD="build"
-    for SRC in $SRCS; do
+        for SRC in $SRCS; do
         if [[ -e $SRC ]]; then
             # remove a extensão .c e adiciona a extensão .o
             OBJ=${SRC%.*}.o
             # remove src/ e adiciona build/
-            OBJ=$BUILD/${OBJ##*/}
+            OBJ=${BUILD_DIR}/${OBJ##*/}
             printf "$SRC:\n -o $OBJ\n"
-            gcc -c $SRC -o $OBJ
+            $CC $CFLAGS -c $SRC -o $OBJ
         fi
     done
 
-    # fixamos o executável final em build/main
-    local TARGET="${BUILD}/main"
-    local OBJS="${BUILD}/*.o"
-    printf "main:\n -o $TARGET\n"
-    gcc $OBJS -o $TARGET
+    # gera o executável principal
+    local OBJS="${BUILD_DIR}/*.o"
+    printf "main:\n -o ${BUILD_DIR}/${TARGET}\n"
+    $CC $CFLAGS $OBJS -o ${BUILD_DIR}/${TARGET}
 
     return 0
 }
@@ -120,12 +113,12 @@ if [[ $1 = 'run' ]]; then
     verbose_mode
 fi
 cbuild_run() {
-	touch build/.last_run
+	touch $BUILD_DIR/.last_run
 
-    if [[ -d ./build && -e ./build/main ]]; then
-        build/main $run_args
+    if [[ -d $BUILD_DIR && -e $BUILD_DIR/$TARGET ]]; then
+        $BUILD_DIR/$TARGET $run_args
     else
-        echo "ERRO: ./build/main inexistente"
+        echo "ERRO: $BUILD_DIR/$TARGET inexistente"
     fi
     return 0
 }
@@ -137,8 +130,8 @@ if [[ $1 = 'clean' ]]; then
 fi
 cbuild_clean() {
 
-	arquivos_log=$(ls logs | sort )
-	arquivos_build=$( ls build | sort)
+	arquivos_log=$(ls $LOGS_DIR | sort )
+	arquivos_build=$( ls $BUILD_DIR | sort)
 
 	echo "====================================="
 	echo "Apagando os seguintes arquivos:"
@@ -156,7 +149,7 @@ cbuild_clean() {
 	done
 
 	echo "====================================="
-	rm -f build/* logs/*
+	rm -f $BUILD_DIR/* $LOGS_DIR/*
 }
 end_mode
 
@@ -165,32 +158,30 @@ if [[ $1 = 'rebuild' ]]; then
     verbose_mode
 fi
 cbuild_rebuild() {
-    local SRCS="src/*.c"
-    local BUILD="build"
-    local TARGET="$BUILD/main"
-    local OBJS="${BUILD}/*.o"
+    local TARGET="${BUILD_DIR}/main"
+    local OBJS="${BUILD_DIR}/*.o"
 
     local ch='false'
     for SRC in $SRCS; do
         # remove a extensão .c e adiciona .o
         OBJ=${SRC%.*}.o
         # remove src/ e adiciona build/
-        OBJ=$BUILD/${OBJ##*/}
+        OBJ=$BUILD_DIR/${OBJ##*/}
         # compara o timestamp de cada arquivo fonte com o seu objeto,
         # se o código-fonte é mais novo que o objeto, houve uma alteração
         # após a compilação;
         if [[ $SRC -nt $OBJ ]]; then
             printf "$SRC:\n -o $OBJ\n"
-            gcc -c $SRC -o $OBJ
+            $CC $CFLAGS -c $SRC -o $OBJ
             ch='true'
         fi
     done
 
     # só recompilar a main se houve mudança
     if [[ $ch = 'true' ]]; then 
-        printf "main:\n -o $TARGET\n"
+        printf "main:\n -o $BUILD_DIR/$TARGET\n"
         # fixamos o executável final em build/main
-        gcc $OBJS -o $TARGET
+        $CC $CFLAGS $OBJS -o $BUILD_DIR/$TARGET
     fi
 
     return 0
@@ -198,7 +189,7 @@ cbuild_rebuild() {
 end_mode
 
 
-gerar_logs(){
+gerar_logs() {
 	data_hora=$(date '+%d-%m-%Y_%H-%M-%S')
 	nome_log="cbuild_$data_hora.txt"
 	echo '' > "$nome_log"
@@ -269,7 +260,7 @@ gerar_logs(){
 	echo ""
 	} >>  "$nome_log"
 
-	mv "$nome_log" logs
+	mv "$nome_log" $LOGS_DIR
 	rm -f "temp_log.txt"
 }
 
@@ -277,7 +268,7 @@ gerar_logs(){
 if [[ $1 = 'info' ]]; then 
     verbose_mode
 fi
-cbuild_info(){
+cbuild_info() {
 	# Coleta de Dados
 	local qtd_c=$(find src -name "*.c" 2>/dev/null | wc -l)
 	local qtd_h=$(find include -name "*.h" 2>/dev/null | wc -l)
@@ -294,16 +285,15 @@ cbuild_info(){
 
 	local tamanho="Indisponível"
 	local data_compilacao="Indisponível"
-	local TARGET="build/main"
 
-	if [[ -f "$TARGET" ]]; then
-		tamanho=$(du -h "$TARGET" | cut -f1)
-		data_compilacao=$(date -r "$TARGET" "+%d/%m/%Y %H:%M:%S")
+	if [[ -f "$BUILD_DIR/$TARGET" ]]; then
+		tamanho=$(du -h "$BUILD_DIR/$TARGET" | cut -f1)
+		data_compilacao=$(date -r "$BUILD_DIR/$TARGET" "+%d/%m/%Y %H:%M:%S")
 	fi
 
 	local data_execucao="Indisponível"
-	if [[ -f "build/.last_run" ]]; then
-		data_execucao=$(date -r "build/.last_run" "+%d/%m/%Y %H:%M:%S")
+	if [[ -f "$BUILD_DIR/.last_run" ]]; then
+		data_execucao=$(date -r "$BUILD_DIR/.last_run" "+%d/%m/%Y %H:%M:%S")
 	fi
 
 	# Exibição na Tela (Terminal)
