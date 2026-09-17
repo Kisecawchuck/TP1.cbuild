@@ -18,6 +18,6 @@
 *.pdf
 
 # Artefatos de compilação
-build/*
-logs/*
+**/build/
+**/logs/*
 *.o
