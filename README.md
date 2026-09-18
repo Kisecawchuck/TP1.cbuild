@@ -48,10 +48,20 @@ Cada arquivo-fonte é compilado individualmente em um objeto `.o` dentro de `bui
 |--------|-------------|
 | `2` | Compilador (`CC`) não encontrado |
 | `3` | Nenhum arquivo de código-fonte válido |
+| `6` | Houve um erro durante a compilação |
 
 ### `rebuild`
 
-Compilação incremental — recompila apenas arquivos-fonte modificados desde a última build, usando o operador `-nt` do Bash para comparar datas de modificação entre `.c` e `.o`. A etapa de linkagem só ocorre se algum arquivo tiver sido recompilado. Usa os mesmos códigos de erro do `build`.
+Compilação incremental — recompila apenas arquivos-fonte modificados desde a última build, usando o operador `-nt` do Bash para comparar datas de modificação entre `.c` e `.o`. A etapa de linkagem só ocorre se algum arquivo tiver sido recompilado. 
+
+**Códigos de erro:**
+
+| Código | Significado |
+|--------|-------------|
+| `2` | Compilador (`CC`) não encontrado |
+| `3` | Nenhum arquivo de código-fonte válido |
+| `6` | Houve um erro durante a compilação |
+| `7` | Não houve compilação anterior |
 
 ### `run`
 
