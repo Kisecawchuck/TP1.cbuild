@@ -2,7 +2,10 @@
 
 # lê arquivo de configuração
 if [[ -e cbuild.conf ]]; then
-    source cbuild.conf
+	source cbuild.conf
+else
+	echo "ERRO: arquivo de configuração inexistente!"
+	exit
 fi
 
 # CONSTANTES GLOBAIS
@@ -132,6 +135,16 @@ if [[ $1 = 'clean' ]]; then
 fi
 cbuild_clean() {
 
+	if [[ ! -d $LOGS_DIR  ]]; then
+		echo "ERRO: Pasta logs inexistente!"
+		return 1;
+	fi
+	
+	if [[ ! -d $BUILD_DIR ]]; then 
+		echo "ERRO: Pasta build inexistente!"
+		return 2;
+	fi
+
 	arquivos_log=$(ls $LOGS_DIR | sort )
 	arquivos_build=$( ls $BUILD_DIR | sort)
 
@@ -152,6 +165,8 @@ cbuild_clean() {
 
 	echo "====================================="
 	rm -f $BUILD_DIR/* $LOGS_DIR/*
+
+	return 0
 }
 end_mode
 
@@ -216,6 +231,11 @@ gerar_logs() {
 	# Executa o comando e guarda sua saída ou seus erros dentro de um log
 	"$comando_exec" 2>&1 | tee -a "temp_log.txt"
 
+	# PIPESTATUS é um array que guarda a saída de retorno do comando executado
+	# pelo tee em PIPESTATUS[0] e a saída do próprio tee em PIPESTATUS[1]
+	
+	codigo_retorno=${PIPESTATUS[0]}
+	
 	# encerra o modo debug
 	end_mode
 	
@@ -225,10 +245,9 @@ gerar_logs() {
 	exec 3>&-
 
 	saida_comando=$(cat "temp_log.txt")
-	codigo_retorno=$?
 	status="SUCESSO"
 
-	if [[ $codigo_retorno -eq 1 ]]; then
+	if [[ $codigo_retorno -ne 0 ]]; then
 		status="FALHA"
 	fi
 	# Tiramos a diferença entre o inicio do horário de sexecução
@@ -264,6 +283,8 @@ gerar_logs() {
 
 	mv "$nome_log" $LOGS_DIR
 	rm -f "temp_log.txt"
+
+	return 0
 }
 
 
