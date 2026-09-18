@@ -288,7 +288,7 @@ gerar_logs() {
     	echo "CÓDIGO DE RETORNO : $codigo_retorno"
     	echo "STATUS            : $status"
     	echo "-----------------------------------------------------------"
-    	echo "SAÍDA DE CÓDIGO DE RETORNO/ERRO  (stdout/stderr):"
+    	echo "SAÍDA DO COMANDO/SAÍDA DE ERRO  (stdout/stderr):"
 	echo "$saida_comando"
     	echo "==========================================================="
 	echo ""
@@ -297,7 +297,7 @@ gerar_logs() {
 	mv "$nome_log" $LOGS_DIR
 	rm -f "temp_log.txt"
 
-	return 0
+	return $codigo_retorno
 }
 
 
