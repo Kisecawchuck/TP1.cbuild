@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# === Configuração padrão para o cbuild ===
+# define diretório de execução do cbuild
+CBUILD_PATH='.'
+# define nome do executável
+TARGET=main
+# define compilador de C
+CC=gcc
+# define flags para o compilador de C
+CFLAGS='-Wall -Werror'
+
 # lê arquivo de configuração
 if [[ -e cbuild.conf ]]; then
     source cbuild.conf
