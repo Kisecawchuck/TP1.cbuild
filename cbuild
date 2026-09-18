@@ -103,7 +103,11 @@ cbuild_build() {
     done
 
     # gera o executável principal
-    local OBJS="${BUILD_DIR}/*.o"
+    local OBJS=$(find $BUILD_DIR -name "*.o" > 2/dev/null)
+    if [[ -z OBJS ]]; then
+        echo "ERRO: erro de compilação"
+        return 6
+    fi
     printf "main:\n $CFLAGS -o ${BUILD_DIR}/${TARGET}\n"
     $CC $CFLAGS $OBJS -o ${BUILD_DIR}/${TARGET}
 
@@ -184,7 +188,11 @@ cbuild_rebuild() {
         return 3
     fi
 
-    local OBJS="${BUILD_DIR}/*.o"
+    local OBJS=$(find $BUILD_DIR -name "*.o" 2> /dev/null)
+    if [[ -z $OBJS ]]; then
+        echo "ERRO: não há compilação anterior"
+        return 7
+    fi
 
     local changed='false'
     for SRC in $SRCS; do
