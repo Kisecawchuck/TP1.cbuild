@@ -123,7 +123,7 @@ cbuild_run() {
     touch $BUILD_DIR/.last_run
 
     if [[ -d $BUILD_DIR && -e $BUILD_DIR/$TARGET ]]; then
-        $BUILD_DIR/$TARGET $run_args
+        $BUILD_DIR/$TARGET "$run_args"
     else
         echo "ERRO: $BUILD_DIR/$TARGET inexistente"
         return 4
@@ -217,6 +217,8 @@ cbuild_rebuild() {
         printf "main:\n $CFLAGS -o $BUILD_DIR/$TARGET\n"
         # fixamos o executável final em build/main
         $CC $CFLAGS $OBJS -o $BUILD_DIR/$TARGET
+    else
+        echo "AVISO: Nada foi alterado."
     fi
 
     return 0
@@ -390,7 +392,7 @@ verbose_mode
 main() {
     # execução sem argumentos
     if [[ $# -lt 1 ]]; then
-        echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info }"
+        echo "Uso: $0 [OPÇÃO...] {build | run | clean | rebuild | info }"
         return 5
     fi
 
