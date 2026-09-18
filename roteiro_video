@@ -1,10 +1,12 @@
 #!/bin/bash
 
-TESTES=(. testes/projeto_com_erro testes/projeto_sem_c testes/projeto_valido testes/ep_aed)
-FUNCOES=(build run rebuild info clean)
+TESTES=(. testes/projeto_com_erro testes/projeto_sem_c testes/projeto_valido testes/projeto_argumento)
+FUNCOES=(build run rebuild info invalido clean)
 
 for t in ${TESTES[@]}; do
 	echo "=== Teste $t ==="
+	echo "Executando cbuild na raíz do projeto cbuild"
+    echo "================"
 	# gera cbuild.conf com PATH adequado
 	printf "# Arquivo de configuração para o cbuild\n
 	# define diretório de execução do cbuild\n
@@ -16,18 +18,33 @@ for t in ${TESTES[@]}; do
 	# define flags para o compilador de C\n
 	CFLAGS='-Wall -Werror'\n" > cbuild.conf
 
-	echo "Executando cbuild na raíz do projeto cbuild"
-	sleep 1
+    read -n 1 -s -r -p ""
 	for f in ${FUNCOES[@]}; do
-		echo "== Saída de $f: =="
-		./cbuild $f
-		if [[ $t = 'testes/ep_aed' && $f = 'run' ]]; then
-			echo "= Saída da execução sem argumentos ="
-			./cbuild $f
-			echo "= Saída da execução com argumentos ="
-			./cbuild -r "testes/ep_aed/textos/texto.txt" $f
-		fi
-		sleep 1
-	done
-	sleep 5
+		echo "== Saída de $f =="
+        case case $f in
+            build)
+                echo "= Modo padrão ="
+                ./cbuild $f
+                echo "= Modo debug ="
+                ./cbuild -D $f
+                ;;
+
+            clean)
+                echo "= Modo padrão ="
+                ./cbuild $f
+                echo "= Modo verboso ="
+                ./cbuild -V $f
+                ;;
+
+            run)
+                if [[ $t = 'testes/ep_aed' ]]; then
+                    echo "= Saída da execução sem argumentos ="
+                    ./cbuild $f
+                    echo "= Saída da execução com argumentos ="
+                    ./cbuild -r "texto muito legal" $f
+                fi
+                ;;
+        esac
+        read -n 1 -s -r -p ""
+    done
 done
