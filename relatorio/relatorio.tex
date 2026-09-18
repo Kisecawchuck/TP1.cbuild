@@ -27,7 +27,7 @@
 A construção do Cbuild - Uma ferramenta de automatização para projetos em c - foi o foco desse trabalho, feito em script (Bash) com conceitos de versionamento de código, moduralização lógica através de funções e tratametnos de erros.
 
 \section{Estrutura}
-A ferraemnta foi feita em um único arquivo, com todos os seus comportamentos divididos em funções. O seu uso é feito atraves da linha de comando do Bash.
+A ferramente foi feita em um único arquivo, com todos os seus comportamentos divididos em funções. O seu uso é feito atraves da linha de comando do Bash. É possível definir o diretório em que cbuild será executado, o compilador de C usado para a compilação dos arquivos de código-fonte, o nome do executável final, as flags de compilação a partir do arquivo de configuração \texttt{cbuild.conf}.
 
 \section{Arquitetura}
 A arquitetura do script é composta por três camadas principais:
@@ -37,21 +37,26 @@ A arquitetura do script é composta por três camadas principais:
     \item \textbf{Camada de Roteamento (Case)}
 \end{enumerate}
 
-Essa decisão de projeto nos ajudou no desenvolvimento, pois consegumos delegar cada camada para 1 ou 2 integrantes e trabalharmos separademtne em cada camada, onde um erro não interferia no desenvolvimento do ouro sub-grupo.
+Essa decisão de projeto nos ajudou no desenvolvimento, pois consegumos delegar cada camada para 1 ou 2 integrantes e trabalharmos separadamente em cada camada, onde um erro não interferia no desenvolvimento do outro sub-grupo.
 
 \subsection{build}
-O comando \texttt{build} é o núcleo de compilação da ferramenta. Antes de iniciar o processo, a função realiza uma série de verificações de segurança (tratamento de erros): checa se o compilador \texttt{gcc} está instalado no sistema e se o diretório \texttt{src/} contém arquivos de código-fonte válidos. Caso essas condições não sejam atendidas, o script é interrompido com um código de erro específico.
+O comando \texttt{build} é o núcleo de compilação da ferramenta. Antes de iniciar o processo, a função realiza uma série de verificações de segurança (tratamento de erros): verifica se o compilador \texttt{CC} definido no arquivo de configuração (\texttt{GCC} por padrão) está instalado no sistema e se o diretório \texttt{src/} contém arquivos de código-fonte válidos. Caso essas condições não sejam atendidas, o script é interrompido com um código de erro específico:
+
+\begin{itemize}
+    \item \texttt{2}: \texttt{CC} não está instalado
+    \item \texttt{3}: Não há arquivos de código-fonte válidos
+\end{itemize}
 
 A estratégia de descoberta de arquivos de forma recursiva  sobre todos os arquivos de origem. Cada arquivo \texttt{.c} é compilado individualmente para um arquivo objeto \texttt{.o} dentro do diretório \texttt{build/}.
 
 \subsection{run}
-A função \texttt{run} é responsável pela execução do projeto. Ela inicialmente verifica a existência do diretório \texttt{build/} e do executável \texttt{main}. Caso o projeto não tenha sido compilado previamente, a execução é abortada com uma mensagem de erro . Se a validação for bem-sucedida, o binário é executado.
+A função \texttt{run} é responsável pela execução do projeto. Ela inicialmente verifica a existência do diretório \texttt{build/} e do executável \texttt{main}. Caso o projeto não tenha sido compilado previamente, a execução é abortada com uma mensagem de erro e retorna o código de erro \texttt{4}. Se a validação for bem-sucedida, o binário é executado. É possível passar argumentos de linha de comando para a execução do executável principal com a flag -r.
 
 \subsection{clean}
 O comando \texttt{clean} atua na manutenção do ambiente de desenvolvimento. Sua implementação consiste na remoção forçada e silenciosa (\texttt{rm -f}) de todos os artefatos de compilação contidos no diretório \texttt{build/} e dos arquivos temporários no diretório \texttt{logs/}, garantindo que a próxima compilação ocorra do zero.
 
 \subsection{rebuild}
-A função \texttt{rebuild} implementa o mecanismo de \textbf{compilação incremental}. Em vez de recompilar todo o projeto cegamente, o script compara o \textit{timestamp} de modificação de cada arquivo fonte (\texttt{.c}) com o seu respectivo arquivo objeto (\texttt{.o}). Utilizando o comando \texttt{date -r <arquivo> "+\%s"}, obtemos a data em formato \textit{Epoch}. Se o código-fonte possuir um \textit{timestamp} superior ao do objeto, ou se o objeto não existir, o arquivo é recompilado. Caso contrário, ele é ignorado. Ao final, a linkagem do executável principal só é refeita se pelo menos um arquivo objeto tiver sido atualizado.
+A função \texttt{rebuild} implementa o mecanismo de \textbf{compilação incremental}. Em vez de recompilar todo o projeto cegamente, o script compara o \textit{timestamp} de modificação de cada arquivo fonte (\texttt{.c}) com o seu respectivo arquivo objeto (\texttt{.o}). Utilizando o comando \texttt{date -r <arquivo> "+\%s"}, obtemos a data em formato \textit{Epoch}. Se o código-fonte possuir um \textit{timestamp} superior ao do objeto, ou se o objeto não existir, o arquivo é recompilado. Caso contrário, ele é ignorado. Ao final, a linkagem do executável principal só é refeita se pelo menos um arquivo objeto tiver sido atualizado. Retorna os mesmos códigos de erro que cbuild se o compilador padrão \texttt{CC} não está instalado e se não há arquivos de código-fonte válidos.
 
 \subsection{info}
 O comando \texttt{info} coleta e exibe metadados vitais do projeto. A estratégia de contagem de arquivos e das Linhas de Código utiliza os comandos \texttt{find} acoplados ao utilário \texttt{wc -l}. O script processa de forma recursiva os diretórios \texttt{src/} e \texttt{include/}, lidando de forma segura com diretórios vazios. 
