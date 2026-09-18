@@ -1,7 +1,6 @@
 #!/bin/bash
 
 TESTES=(testes/projeto_valido testes/projeto_sem_c testes/projeto_com_erro testes/projeto_argumento)
-FUNCOES=(info build run rebuild invalido clean)
 
 for t in ${TESTES[@]}; do
     # gera cbuild.conf com PATH adequado
