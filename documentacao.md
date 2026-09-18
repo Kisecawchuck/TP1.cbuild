@@ -1,39 +1,39 @@
 # Manual do cbuild
 
-# Sinopse
+## Sinopse
 
 - `cbuild [OPÇÃO] [COMANDO]`
 - `cbuild -r ARGS run`
 
-# Descrição
+## Descrição
 
 `cbuild` é um sistema de automação para projetos em C. Por padrão ele é executado no diretório atual, usando o GCC como compilador de C, com as flags `-Wall -Werror`, gera o executável com o nome `main`, tudo isso pode ser configurado no `cbuild.conf`.
 
-# COMANDOS
+## COMANDOS
 
-## build
+### build
 
 Compila os arquivos-fonte em objetos e depois compila o executável principal. O nome do executável, Compilador de C usado e flags de compilação estão definidos no `cbuild.conf`.
 
-## run
+### run
 
 Roda o executável principal.
 
 - `-r` usa `ARGS` como argumento de linha de comando do executável principal
 
-## clean
+### clean
 
 Limpa os fragmentos de compilação (build, logs).
 
-## rebuild
+### rebuild
 
 Recompila se houve alguma alteração no projeto.
 
-## info
+### info
 
 Mostre as estatísticas do projeto. O número de linhas considera comentários e linhas vazias.
 
-# Códigos de erro
+## Códigos de erro
 
 - `1` Execução sem comando.
 
