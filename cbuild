@@ -99,17 +99,21 @@ cbuild_build() {
             OBJ=${BUILD_DIR}/${OBJ##*/}
             printf "$SRC:\n $CFLAGS -o $OBJ\n"
             $CC $CFLAGS -c $SRC -o $OBJ
+            if [[ $? != 0 ]]; then
+                echo "ERRO: falha na compilação"
+                return 6
+            fi
         fi
     done
 
     # gera o executável principal
     local OBJS=$(find $BUILD_DIR -name "*.o" 2> /dev/null)
-    if [[ -z $OBJS ]]; then
+    printf "main:\n $CFLAGS -o ${BUILD_DIR}/${TARGET}\n"
+    $CC $CFLAGS $OBJS -o ${BUILD_DIR}/${TARGET}
+    if [[ $? != 0 ]]; then
         echo "ERRO: falha na compilação"
         return 6
     fi
-    printf "main:\n $CFLAGS -o ${BUILD_DIR}/${TARGET}\n"
-    $CC $CFLAGS $OBJS -o ${BUILD_DIR}/${TARGET}
 
     return 0
 }
@@ -208,6 +212,10 @@ cbuild_rebuild() {
         if [[ $SRC -nt $OBJ ]]; then
             printf "$SRC:\n $CFLAGS -o $OBJ\n"
             $CC $CFLAGS -c $SRC -o $OBJ
+            if [[ $? != 0 ]]; then
+                echo "ERRO: falha na compilação"
+                return 6
+            fi
             changed='true'
         fi
     done
@@ -217,6 +225,10 @@ cbuild_rebuild() {
         printf "main:\n $CFLAGS -o $BUILD_DIR/$TARGET\n"
         # fixamos o executável final em build/main
         $CC $CFLAGS $OBJS -o $BUILD_DIR/$TARGET
+        if [[ $? != 0 ]]; then
+            echo "ERRO: falha na compilação"
+            return 6
+        fi
     else
         echo "AVISO: Nada foi alterado."
     fi
