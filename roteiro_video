@@ -1,12 +1,19 @@
 #!/bin/bash
 
-TESTES=(. testes/projeto_com_erro testes/projeto_sem_c testes/projeto_valido testes/projeto_argumento)
-FUNCOES=(build run rebuild info invalido clean)
+TESTES=(testes/projeto_valido testes/projeto_sem_c testes/projeto_com_erro testes/projeto_argumento)
+FUNCOES=(info build run rebuild clean)
 
 for t in ${TESTES[@]}; do
-	echo "=== Teste $t ==="
-	echo "Executando cbuild na raíz do projeto cbuild"
-    echo "================"
+    clear
+    teste=${t#testes/}
+    count=$(echo $teste | wc -m)
+    count=$(($count + 27))
+    printf -v foo '%*s' "$count"
+    printf '%s\n' "${foo// /=}"
+	echo "Teste: $teste"
+	echo "Executando cbuild no teste $teste"
+    printf '%s\n' "${foo// /=}"
+    echo ""
 	# gera cbuild.conf com PATH adequado
 	printf "# Arquivo de configuração para o cbuild\n
 	# define diretório de execução do cbuild\n
@@ -18,33 +25,60 @@ for t in ${TESTES[@]}; do
 	# define flags para o compilador de C\n
 	CFLAGS='-Wall -Werror'\n" > cbuild.conf
 
-    read -n 1 -s -r -p ""
+    sleep 5
 	for f in ${FUNCOES[@]}; do
-		echo "== Saída de $f =="
-        case case $f in
-            build)
-                echo "= Modo padrão ="
-                ./cbuild $f
-                echo "= Modo debug ="
-                ./cbuild -D $f
-                ;;
+		echo "Saída de $f:"
+        if [[ $f = 'build' && $teste = 'projeto_valido' ]]; then
+            echo "= Modo padrão ="
+            echo "./cbuild $f"
+            ./cbuild $f
+            echo ""
+            sleep 5
 
-            clean)
-                echo "= Modo padrão ="
-                ./cbuild $f
-                echo "= Modo verboso ="
-                ./cbuild -V $f
-                ;;
+            echo "= Modo debug ="
+            echo "./cbuild -D $f"
+            sleep 5
+            ./cbuild -D $f
+            echo ""
+            sleep 5
+            echo "= Modo verboso ="
+            echo "./cbuild -V $f"
+            sleep 5
+            ./cbuild -V $f
+            
+        elif [[ $f = 'rebuild' && $teste = 'projeto_valido' ]]; then
+            echo "./cbuild $f"
+            sleep 5
+            ./cbuild $f
+            sleep 5
+            echo ""
+            echo "Adicionamos linha inútil"
+            echo "echo '// linha inútil' >> testes/projeto_valido/src/main.c"
+            echo "// linha inútil" >> testes/projeto_valido/src/main.c
+            echo "./cbuild $f"
+            sleep 5
+            ./cbuild $f
 
-            run)
-                if [[ $t = 'testes/ep_aed' ]]; then
-                    echo "= Saída da execução sem argumentos ="
-                    ./cbuild $f
-                    echo "= Saída da execução com argumentos ="
-                    ./cbuild -r "texto muito legal" $f
-                fi
-                ;;
-        esac
-        read -n 1 -s -r -p ""
+        elif [[ $f = 'run' && $teste = 'projeto_argumento' ]]; then
+            echo "= Saída da execução sem argumentos ="
+            echo "./cbuild $f"
+            ./cbuild $f
+            sleep 5
+            echo "= Saída da execução com argumentos ="
+            echo "./cbuild -r 'texto muito legal' $f"
+            ./cbuild -r "texto muito legal" $f
+            sleep 5
+
+        else
+            echo "./cbuild $f"
+            sleep 5
+            ./cbuild $f
+        fi
+
+        echo ""
+        printf '%s\n' "${foo// /=}"
+        echo ""
+
+        sleep 5
     done
 done

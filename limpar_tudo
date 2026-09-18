@@ -17,5 +17,6 @@ for t in ${TESTES[@]}; do
 
     ./cbuild clean
     rm $t/logs/*
+    rm $t/build/.*
 done
 
