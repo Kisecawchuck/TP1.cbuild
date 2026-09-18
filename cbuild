@@ -94,7 +94,7 @@ cbuild_build() {
     for SRC in $SRCS; do
         if [[ -e $SRC ]]; then
             # remove a extensão .c e adiciona a extensão .o
-            OBJ=${SRC%.*}.o
+            OBJ=${SRC%.c}.o
             # remove src/ e adiciona build/
             OBJ=${BUILD_DIR}/${OBJ##*/}
             printf "$SRC:\n $CFLAGS -o $OBJ\n"
@@ -104,8 +104,8 @@ cbuild_build() {
 
     # gera o executável principal
     local OBJS=$(find $BUILD_DIR -name "*.o" 2> /dev/null)
-    if [[ -z OBJS ]]; then
-        echo "ERRO: erro de compilação"
+    if [[ -z $OBJS ]]; then
+        echo "ERRO: falha na compilação"
         return 6
     fi
     printf "main:\n $CFLAGS -o ${BUILD_DIR}/${TARGET}\n"
@@ -199,7 +199,7 @@ cbuild_rebuild() {
     local changed='false'
     for SRC in $SRCS; do
         # remove a extensão .c e adiciona .o
-        OBJ=${SRC%.*}.o
+        OBJ=${SRC%.c}.o
         # remove src/ e adiciona build/
         OBJ=$BUILD_DIR/${OBJ##*/}
         # compara o timestamp de cada arquivo fonte com o seu objeto,
@@ -304,10 +304,10 @@ gerar_logs() {
         echo ""
     } >>  "$nome_log"
 
-mv "$nome_log" $LOGS_DIR
-rm -f "temp_log.txt"
+    mv "$nome_log" $LOGS_DIR
+    rm -f "temp_log.txt"
 
-return $codigo_retorno
+    return $codigo_retorno
 }
 
 
@@ -374,18 +374,11 @@ cbuild_info() {
         echo "Última execução: $data_execucao"
         echo "========================================"
     } > "$arquivo_relatorio"
-echo ">> Relatório detalhado gerado com sucesso em: $arquivo_relatorio"
-
-return 0
+    echo ">> Relatório detalhado gerado com sucesso em: $arquivo_relatorio"
+    return 0
 }
 end_mode
 
-
-# execução sem argumentos
-if [[ $# -lt 1 ]]; then
-    echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info }"
-    exit 2
-fi
 
 #Executa em modo debug todo comando chamado após debu_mode, caso o modo 
 # debug tenha sido inicializado
@@ -394,37 +387,43 @@ debug_mode
 # Executa a chamada dos cases em modo verboso, caso o modo verboso tenha sido
 # inicializa-do
 verbose_mode
+main() {
+    # execução sem argumentos
+    if [[ $# -lt 1 ]]; then
+        echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info }"
+        return 5
+    fi
 
-
-for f in $@; do
-    case $f in
-        build)
-            gerar_logs cbuild_build
-            exit $?
-            ;;
-        run)
-            gerar_logs cbuild_run
-            exit $? 
-            ;;
-        clean)
-            gerar_logs cbuild_clean
-            exit $? 
-            ;;
-        rebuild)
-            gerar_logs cbuild_rebuild
-            exit $?
-            ;;
-        info)
-            gerar_logs cbuild_info
-            exit $? 
-            ;;
-        *)
-            echo "ERRO: comando '$f' não reconhecido"
-            exit 1 
-            ;;
-    esac
-done
+    for f in $@; do
+        case $f in
+            build)
+                gerar_logs cbuild_build
+                return $?
+                ;;
+            run)
+                gerar_logs cbuild_run
+                return $? 
+                ;;
+            clean)
+                gerar_logs cbuild_clean
+                return $? 
+                ;;
+            rebuild)
+                gerar_logs cbuild_rebuild
+                return $?
+                ;;
+            info)
+                gerar_logs cbuild_info
+                return $? 
+                ;;
+            *)
+                echo "ERRO: comando '$f' não reconhecido"
+                return 1 
+                ;;
+        esac
+    done
+}
 end_mode
 
-# Guarda o horário de fim da execução em segundos e nanosegundos
-exit 0
+main $@
+exit $?
