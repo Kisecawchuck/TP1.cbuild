@@ -2,10 +2,10 @@
 
 # lê arquivo de configuração
 if [[ -e cbuild.conf ]]; then
-	source cbuild.conf
+    source cbuild.conf
 else
-	echo "ERRO: arquivo de configuração inexistente!"
-	exit 5
+    echo "ERRO: arquivo de configuração inexistente!"
+    exit 5
 fi
 
 # CONSTANTES GLOBAIS
@@ -91,7 +91,7 @@ cbuild_build() {
     fi
 
     # transformamos cada arquivo código-fonte em objeto
-        for SRC in $SRCS; do
+    for SRC in $SRCS; do
         if [[ -e $SRC ]]; then
             # remove a extensão .c e adiciona a extensão .o
             OBJ=${SRC%.*}.o
@@ -120,7 +120,7 @@ if [[ $1 = 'run' ]]; then
     verbose_mode
 fi
 cbuild_run() {
-	touch $BUILD_DIR/.last_run
+    touch $BUILD_DIR/.last_run
 
     if [[ -d $BUILD_DIR && -e $BUILD_DIR/$TARGET ]]; then
         $BUILD_DIR/$TARGET $run_args
@@ -137,34 +137,34 @@ if [[ $1 = 'clean' ]]; then
     verbose_mode
 fi
 cbuild_clean() {
-	arquivos_log=$(ls $LOGS_DIR | sort )
-	arquivos_build=$(ls $BUILD_DIR | sort)
-    arquivos_relatorios=$(ls $RELATORIOS_DIR | sort)
+    arquivos_log=$(ls $LOGS_DIR 2> /dev/null | sort )
+    arquivos_build=$(ls $BUILD_DIR 2> /dev/null | sort)
+    arquivos_relatorios=$(ls $RELATORIOS_DIR 2> /dev/null | sort)
 
-	echo "====================================="
-	echo "Apagando os seguintes arquivos:"
+    echo "====================================="
+    echo "Apagando os seguintes arquivos:"
 
-	echo "Pasta logs: "
-	for i in ${arquivos_log[@]}; do
-		echo "- $i"
-	done
+    echo "Pasta logs: "
+    for i in ${arquivos_log[@]}; do
+        echo "- $i"
+    done
 
-	echo " "
+    echo " "
 
-	echo "Pasta build: "
-	for j in ${arquivos_build[@]}; do
-		echo "- $j"
-	done
+    echo "Pasta build: "
+    for j in ${arquivos_build[@]}; do
+        echo "- $j"
+    done
 
-	echo "Pasta relatorios: "
-	for i in ${arquivos_relatorios[@]}; do
-		echo "- $i"
-	done
+    echo "Pasta relatorios: "
+    for i in ${arquivos_relatorios[@]}; do
+        echo "- $i"
+    done
 
-	echo "====================================="
-	rm -f $BUILD_DIR/* $LOGS_DIR/*
+    echo "====================================="
+    rm -rf $BUILD_DIR/* $LOGS_DIR/* $RELATORIOS_DIR/*
 
-	return 0
+    return 0
 }
 end_mode
 
@@ -182,10 +182,6 @@ cbuild_rebuild() {
     # verifica se build é um diretório
     if [[ ! -d $BUILD_DIR ]]; then
         mkdir $BUILD_DIR
-    fi
-    # verifica se logs é um diretório
-    if [[ ! -d $LOGS_DIR ]]; then
-        mkdir $LOGS_DIR
     fi
 
     # verifica se há código-fonte no projeto
@@ -229,89 +225,89 @@ end_mode
 
 
 gerar_logs() {
-	# verifica se logs é um diretório
-	if [[ ! -d $LOGS_DIR ]]; then
-		mkdir $LOGS_DIR
-	fi
+    # verifica se logs é um diretório
+    if [[ ! -d $LOGS_DIR ]]; then
+        mkdir $LOGS_DIR
+    fi
 
-	local data_hora=$(date '+%d-%m-%Y_%H-%M-%S')
-	local nome_log="cbuild_$data_hora.txt"
-	echo '' > "$nome_log"
-	comando_exec=$1
+    local data_hora=$(date '+%d-%m-%Y_%H-%M-%S')
+    local nome_log="cbuild_$data_hora.txt"
+    echo '' > "$nome_log"
+    comando_exec=$1
 
-	# Sem o descritor 3 redirecionado para &2, 
-	# o rastro de set -x, com descritor padrão stderr(descritor 2), 
-	# seria direcionado para o log na execução do comando com o tee
-	# isso faria com que tudo o que fosse impresso no modo debug aparecesse 
-	# na saída do nosso comando dentro do log. Para evitar isso, o descritor 3
-	# redireciona a saída do set -x diretamente apenas para o stderr do próprio shell
-	# fazendo que a saída do set -x apareça apenas no terminal e não no log
+    # Sem o descritor 3 redirecionado para &2, 
+    # o rastro de set -x, com descritor padrão stderr(descritor 2), 
+    # seria direcionado para o log na execução do comando com o tee
+    # isso faria com que tudo o que fosse impresso no modo debug aparecesse 
+    # na saída do nosso comando dentro do log. Para evitar isso, o descritor 3
+    # redireciona a saída do set -x diretamente apenas para o stderr do próprio shell
+    # fazendo que a saída do set -x apareça apenas no terminal e não no log
 
-	exec 3>&2
-	#Saída padrão do set -x
-	BASH_XTRACEFD=3
-	
-	inicio=$(date +%s.%N)
-	#incializa o modo debug
-	debug_mode
-	
-	# Executa o comando e guarda sua saída ou seus erros dentro de um log
-	"$comando_exec" 2>&1 | tee -a "temp_log.txt"
+    exec 3>&2
+    #Saída padrão do set -x
+    BASH_XTRACEFD=3
 
-	# PIPESTATUS é um array que guarda a saída de retorno do comando executado
-	# pelo tee em PIPESTATUS[0] e a saída do próprio tee em PIPESTATUS[1]
-	
-	codigo_retorno=${PIPESTATUS[0]}
-	
-	# encerra o modo debug
-	end_mode
-	
-	fim=$(date +%s.%N)
-	
-	# Como o descritor 3 não será mais usado, podemos descartá-lo
-	exec 3>&-
+    inicio=$(date +%s.%N)
+    #incializa o modo debug
+    debug_mode
 
-	saida_comando=$(cat "temp_log.txt")
-	status="SUCESSO"
+    # Executa o comando e guarda sua saída ou seus erros dentro de um log
+    "$comando_exec" 2>&1 | tee -a "temp_log.txt"
 
-	if [[ $codigo_retorno -ne 0 ]]; then
-		status="FALHA"
-	fi
-	# Tiramos a diferença entre o inicio do horário de sexecução
-	# e do horário de fim da execução  para calcular o tempo 
-	# total de execução
-	tempo_real=$( echo "$fim - $inicio" | bc)
+    # PIPESTATUS é um array que guarda a saída de retorno do comando executado
+    # pelo tee em PIPESTATUS[0] e a saída do próprio tee em PIPESTATUS[1]
 
-	# Para números menorres que 0.5, o bc pode retorná-los sem o 0 da 
-	# primeria posição, por isso colocamos ele aqui
-	if [[ "$tempo_real" == .* ]]; then 
-		tempo_real="0$tempo_real"
-	fi
+    codigo_retorno=${PIPESTATUS[0]}
 
-	# Define o formato para números decimais usarem .
-	# isso é importante pois o printf pode apresentar erros caso 
-	# usemos um número decimal com , da formatação %.4f
-	LC_NUMERIC=C printf -v tempo_real "%.4f" "$tempo_real"
+    # encerra o modo debug
+    end_mode
 
-	# Salva o tempo de execução do comando dentro de logs
-	{
-	echo "==========================================================="
-    	echo "DATA/HORA DE EXECUÇÃO : $data_hora"
-    	echo "COMANDO EXECUTADO : $comando_exec"
-    	echo "TEMPO DE EXECUÇÃO : ${tempo_real}s"
-    	echo "CÓDIGO DE RETORNO : $codigo_retorno"
-    	echo "STATUS            : $status"
-    	echo "-----------------------------------------------------------"
-    	echo "SAÍDA DO COMANDO/SAÍDA DE ERRO  (stdout/stderr):"
-	echo "$saida_comando"
-    	echo "==========================================================="
-	echo ""
-	} >>  "$nome_log"
+    fim=$(date +%s.%N)
 
-	mv "$nome_log" $LOGS_DIR
-	rm -f "temp_log.txt"
+    # Como o descritor 3 não será mais usado, podemos descartá-lo
+    exec 3>&-
 
-	return $codigo_retorno
+    saida_comando=$(cat "temp_log.txt")
+    status="SUCESSO"
+
+    if [[ $codigo_retorno -ne 0 ]]; then
+        status="FALHA"
+    fi
+    # Tiramos a diferença entre o inicio do horário de sexecução
+    # e do horário de fim da execução  para calcular o tempo 
+    # total de execução
+    tempo_real=$( echo "$fim - $inicio" | bc)
+
+    # Para números menorres que 0.5, o bc pode retorná-los sem o 0 da 
+    # primeria posição, por isso colocamos ele aqui
+    if [[ "$tempo_real" == .* ]]; then 
+        tempo_real="0$tempo_real"
+    fi
+
+    # Define o formato para números decimais usarem .
+    # isso é importante pois o printf pode apresentar erros caso 
+    # usemos um número decimal com , da formatação %.4f
+    LC_NUMERIC=C printf -v tempo_real "%.4f" "$tempo_real"
+
+    # Salva o tempo de execução do comando dentro de logs
+    {
+        echo "==========================================================="
+        echo "DATA/HORA DE EXECUÇÃO : $data_hora"
+        echo "COMANDO EXECUTADO : $comando_exec"
+        echo "TEMPO DE EXECUÇÃO : ${tempo_real}s"
+        echo "CÓDIGO DE RETORNO : $codigo_retorno"
+        echo "STATUS            : $status"
+        echo "-----------------------------------------------------------"
+        echo "SAÍDA DO COMANDO/SAÍDA DE ERRO  (stdout/stderr):"
+        echo "$saida_comando"
+        echo "==========================================================="
+        echo ""
+    } >>  "$nome_log"
+
+mv "$nome_log" $LOGS_DIR
+rm -f "temp_log.txt"
+
+return $codigo_retorno
 }
 
 
@@ -319,76 +315,76 @@ if [[ $1 = 'info' ]]; then
     verbose_mode
 fi
 cbuild_info() {
-	# Coleta de Dados
-	local formato_data_hora="+%d-%m-%Y_%H-%M-%S"
-	local data_hora=$(date $formato_data_hora)
-	local qtd_c=$(find $SRC_DIR -name "*.c" 2>/dev/null | wc -l)
-	local qtd_h=$(find $INCLUDE_DIR -name "*.h" 2>/dev/null | wc -l)
-	local linhas_c=0
-	local linhas_h=0
+    # Coleta de Dados
+    local formato_data_hora="+%d-%m-%Y_%H-%M-%S"
+    local data_hora=$(date $formato_data_hora)
+    local qtd_c=$(find $SRC_DIR -name "*.c" 2>/dev/null | wc -l)
+    local qtd_h=$(find $INCLUDE_DIR -name "*.h" 2>/dev/null | wc -l)
+    local linhas_c=0
+    local linhas_h=0
 
-	if [ $qtd_c -gt 0 ]; then
-		linhas_c=$(find $SRC_DIR -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
-	fi
-	if [ $qtd_h -gt 0 ]; then
-		linhas_h=$(find $INCLUDE_DIR -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
-	fi
-	local total_linhas=$((linhas_c + linhas_h))
+    if [ $qtd_c -gt 0 ]; then
+        linhas_c=$(find $SRC_DIR -name "*.c" -exec cat {} + 2>/dev/null | wc -l)
+    fi
+    if [ $qtd_h -gt 0 ]; then
+        linhas_h=$(find $INCLUDE_DIR -name "*.h" -exec cat {} + 2>/dev/null | wc -l)
+    fi
+    local total_linhas=$((linhas_c + linhas_h))
 
-	local tamanho="Indisponível"
-	local data_compilacao="Indisponível"
+    local tamanho="Indisponível"
+    local data_compilacao="Indisponível"
 
-	if [[ -f "$BUILD_DIR/$TARGET" ]]; then
-		tamanho=$(du -h "$BUILD_DIR/$TARGET" | cut -f1)
-		data_compilacao=$(date -r "$BUILD_DIR/$TARGET" $formato_data_hora)
-	fi
+    if [[ -f "$BUILD_DIR/$TARGET" ]]; then
+        tamanho=$(du -h "$BUILD_DIR/$TARGET" | cut -f1)
+        data_compilacao=$(date -r "$BUILD_DIR/$TARGET" $formato_data_hora)
+    fi
 
-	local data_execucao="Indisponível"
-	if [[ -f "$BUILD_DIR/.last_run" ]]; then
-		data_execucao=$(date -r "$BUILD_DIR/.last_run" $formato_data_hora)
-	fi
+    local data_execucao="Indisponível"
+    if [[ -f "$BUILD_DIR/.last_run" ]]; then
+        data_execucao=$(date -r "$BUILD_DIR/.last_run" $formato_data_hora)
+    fi
 
-	# Exibição na Tela (Terminal)
-	echo "Arquivos fonte (.c): $qtd_c"
-	echo "Arquivos de cabeçalho (.h): $qtd_h"
-	echo "Total de linhas de código: $total_linhas"
-	echo "Tamanho do executável: $tamanho"
-	echo "Última compilação: $data_compilacao"
-	echo "Última execução: $data_execucao"
-	echo "---------------------------------------------"
+    # Exibição na Tela (Terminal)
+    echo "Arquivos fonte (.c): $qtd_c"
+    echo "Arquivos de cabeçalho (.h): $qtd_h"
+    echo "Total de linhas de código: $total_linhas"
+    echo "Tamanho do executável: $tamanho"
+    echo "Última compilação: $data_compilacao"
+    echo "Última execução: $data_execucao"
+    echo "---------------------------------------------"
 
-	if [[ ! -d $RELATORIOS_DIR ]]; then
-		mkdir $RELATORIOS_DIR
-	fi
-	local arquivo_relatorio="$RELATORIOS_DIR/relatorio_$data_hora.txt"
-	{
-		echo "========================================"
-		echo "       RELATÓRIO DO PROJETO C           "
-		echo "========================================"
-		echo "Data do relatório: $data_hora"
-		echo ""
-		echo "--- ESTATÍSTICAS DOS ARQUIVOS ---"
-		echo "Arquivos fonte (.c): $qtd_c"
-		echo "Arquivos de cabeçalho (.h): $qtd_h"
-		echo "Total de linhas de código: $total_linhas"
-		echo ""
-		echo "--- INFORMAÇÕES DE COMPILAÇÃO ---"
-		echo "Tamanho do executável: $tamanho"
-		echo "Última compilação: $data_compilacao"
-		echo "Última execução: $data_execucao"
-		echo "========================================"
-	} > "$arquivo_relatorio"
-	echo ">> Relatório detalhado gerado com sucesso em: $arquivo_relatorio"
+    if [[ ! -d $RELATORIOS_DIR ]]; then
+        mkdir $RELATORIOS_DIR
+    fi
+    local arquivo_relatorio="$RELATORIOS_DIR/relatorio_$data_hora.txt"
+    {
+        echo "========================================"
+        echo "       RELATÓRIO DO PROJETO C           "
+        echo "========================================"
+        echo "Data do relatório: $data_hora"
+        echo ""
+        echo "--- ESTATÍSTICAS DOS ARQUIVOS ---"
+        echo "Arquivos fonte (.c): $qtd_c"
+        echo "Arquivos de cabeçalho (.h): $qtd_h"
+        echo "Total de linhas de código: $total_linhas"
+        echo ""
+        echo "--- INFORMAÇÕES DE COMPILAÇÃO ---"
+        echo "Tamanho do executável: $tamanho"
+        echo "Última compilação: $data_compilacao"
+        echo "Última execução: $data_execucao"
+        echo "========================================"
+    } > "$arquivo_relatorio"
+echo ">> Relatório detalhado gerado com sucesso em: $arquivo_relatorio"
 
-	return 0
+return 0
 }
 end_mode
 
 
 # execução sem argumentos
 if [[ $# -lt 1 ]]; then
-	echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info }"
-	exit 2
+    echo "Uso: cbuild [OPÇÃO...] {build | run | clean | rebuild | info }"
+    exit 2
 fi
 
 #Executa em modo debug todo comando chamado após debu_mode, caso o modo 
@@ -399,7 +395,7 @@ debug_mode
 # inicializa-do
 verbose_mode
 
-	
+
 for f in $@; do
     case $f in
         build)
