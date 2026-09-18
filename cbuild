@@ -103,7 +103,7 @@ cbuild_build() {
     done
 
     # gera o executável principal
-    local OBJS=$(find $BUILD_DIR -name "*.o" > 2/dev/null)
+    local OBJS=$(find $BUILD_DIR -name "*.o" 2> /dev/null)
     if [[ -z OBJS ]]; then
         echo "ERRO: erro de compilação"
         return 6
@@ -351,10 +351,10 @@ cbuild_info() {
 	echo "Última execução: $data_execucao"
 	echo "---------------------------------------------"
 
-	if [[ ! -d relatorios ]]; then
+	if [[ ! -d $RELATORIOS_DIR ]]; then
 		mkdir $RELATORIOS_DIR
 	fi
-	local arquivo_relatorio="relatorios/relatorio_$data_hora.txt"
+	local arquivo_relatorio="$RELATORIOS_DIR/relatorio_$data_hora.txt"
 	{
 		echo "========================================"
 		echo "       RELATÓRIO DO PROJETO C           "
