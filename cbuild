@@ -5,7 +5,7 @@ if [[ -e cbuild.conf ]]; then
 	source cbuild.conf
 else
 	echo "ERRO: arquivo de configuração inexistente!"
-	exit
+	exit 5
 fi
 
 # CONSTANTES GLOBAIS
@@ -124,6 +124,7 @@ cbuild_run() {
         $BUILD_DIR/$TARGET $run_args
     else
         echo "ERRO: $BUILD_DIR/$TARGET inexistente"
+        return 4
     fi
     return 0
 }
@@ -175,7 +176,27 @@ if [[ $1 = 'rebuild' ]]; then
     verbose_mode
 fi
 cbuild_rebuild() {
-    local TARGET="${BUILD_DIR}/main"
+    # verifica se $CC está instalado
+    if [[ ! $(command -v $CC) ]]; then
+        echo "ERRO: $CC não está instalado"
+        return 2
+    fi
+
+    # verifica se build é um diretório
+    if [[ ! -d $BUILD_DIR ]]; then
+        mkdir $BUILD_DIR
+    fi
+    # verifica se logs é um diretório
+    if [[ ! -d $LOGS_DIR ]]; then
+        mkdir $LOGS_DIR
+    fi
+
+    # verifica se há código-fonte no projeto
+    if [[ ! -d $SRC_DIR || -z $SRCS ]]; then
+        echo "ERRO: não há arquivos .c no projeto"
+        return 3
+    fi
+
     local OBJS="${BUILD_DIR}/*.o"
 
     local ch='false'
