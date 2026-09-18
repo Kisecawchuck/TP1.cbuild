@@ -135,17 +135,6 @@ if [[ $1 = 'clean' ]]; then
     verbose_mode
 fi
 cbuild_clean() {
-
-	if [[ ! -d $LOGS_DIR  ]]; then
-		echo "ERRO: Pasta logs inexistente!"
-		return 1;
-	fi
-	
-	if [[ ! -d $BUILD_DIR ]]; then 
-		echo "ERRO: Pasta build inexistente!"
-		return 2;
-	fi
-
 	arquivos_log=$(ls $LOGS_DIR | sort )
 	arquivos_build=$( ls $BUILD_DIR | sort)
 
@@ -199,7 +188,7 @@ cbuild_rebuild() {
 
     local OBJS="${BUILD_DIR}/*.o"
 
-    local ch='false'
+    local changed='false'
     for SRC in $SRCS; do
         # remove a extensão .c e adiciona .o
         OBJ=${SRC%.*}.o
@@ -211,12 +200,12 @@ cbuild_rebuild() {
         if [[ $SRC -nt $OBJ ]]; then
             printf "$SRC:\n $CFLAGS -o $OBJ\n"
             $CC $CFLAGS -c $SRC -o $OBJ
-            ch='true'
+            changed='true'
         fi
     done
 
     # só recompilar a main se houve mudança
-    if [[ $ch = 'true' ]]; then 
+    if [[ $changed = 'true' ]]; then 
         printf "main:\n $CFLAGS -o $BUILD_DIR/$TARGET\n"
         # fixamos o executável final em build/main
         $CC $CFLAGS $OBJS -o $BUILD_DIR/$TARGET
