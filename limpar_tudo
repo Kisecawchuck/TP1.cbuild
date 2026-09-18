@@ -1,0 +1,21 @@
+#!/bin/bash
+
+TESTES=(testes/projeto_valido testes/projeto_sem_c testes/projeto_com_erro testes/projeto_argumento)
+FUNCOES=(info build run rebuild invalido clean)
+
+for t in ${TESTES[@]}; do
+    # gera cbuild.conf com PATH adequado
+    printf "# Arquivo de configuração para o cbuild\n
+    # define diretório de execução do cbuild\n
+    CBUILD_PATH='${t}'\n
+    # define nome do executável\n
+    TARGET=main\n
+    # define compilador de C\n
+    CC=gcc\n
+    # define flags para o compilador de C\n
+    CFLAGS='-Wall -Werror'\n" > cbuild.conf
+
+    ./cbuild clean
+    rm $t/logs/*
+done
+
