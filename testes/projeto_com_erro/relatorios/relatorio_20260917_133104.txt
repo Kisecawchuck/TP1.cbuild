@@ -1,0 +1,15 @@
+========================================
+       RELATÓRIO DO PROJETO C           
+========================================
+Data do relatório: 17/09/2026 13:31:04
+
+--- ESTATÍSTICAS DOS ARQUIVOS ---
+Arquivos fonte (.c): 1
+Arquivos de cabeçalho (.h): 0
+Total de linhas de código: 2
+
+--- INFORMAÇÕES DE COMPILAÇÃO ---
+Tamanho do executável: Indisponível
+Última compilação: Indisponível
+Última execução: Indisponível
+========================================

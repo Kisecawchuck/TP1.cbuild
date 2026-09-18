@@ -132,7 +132,7 @@ código-fonte válidos no projeto.
 \subsection{info}
 O comando \texttt{info} coleta e exibe metadados vitais do projeto. A estratégia de contagem de arquivos e das Linhas de Código utiliza os comandos \texttt{find} acoplados ao utilário \texttt{wc -l}. O script processa de forma recursiva os diretórios \texttt{src/} e \texttt{include/}, lidando de forma segura com diretórios vazios. 
 
-Além das estatísticas de código, a função obtém o tamanho em disco do executável utilizando \texttt{du -h} e extrai as datas da última compilação (via \textit{timestamp} do binário) e da última execução (através de um arquivo de controle gerado no momento do \texttt{run}). Todos esses dados são exibidos na saída padrão e exportados para um arquivo texto consolidado dentro da pasta \texttt{relatorios/}.
+Além das estatísticas de código, a função obtém o tamanho em disco do executável utilizando \texttt{du -h} e extrai as datas da última compilação e da última execução (através de um arquivo de controle gerado no momento do \texttt{run}). Todos esses dados são exibidos na saída padrão e exportados para um arquivo texto consolidado dentro da pasta \texttt{relatorios/}.
 
 \section{Modos verbose e debug}
 
@@ -210,6 +210,12 @@ Encerra o descritor 3, pois ele não será mais usado.
 \end{verbatim}
 
 Executa o comando \texttt{comando\_exec} e redireciona sua saída para dois canais: um para a saída padrão no terminal e outro para o arquivo \texttt{temp\_log.txt}.
+
+\begin{verbatim}
+codigo_retorno=${PIPESTATUS[0]}
+\end{verbatim}
+
+\texttt{PIPESTATUS} é um array que guarda a saída de retorno do comando executado pelo \texttt{tee} em \texttt{PIPESTATUS[0]} e a saída de retorno do próprio \texttt{tee} em \texttt{PIPESTATUS[1]}. As saídas de retorno dizem se o comando foi executado corretamente com base em um determinado código; 0 indica que ele foi executado corretamente.
 
 \begin{verbatim}
 inicio=$(date +%s.%N)
