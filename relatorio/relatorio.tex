@@ -3,6 +3,7 @@
 \usepackage[portuguese]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{hyperref}
 
 \usepackage{float}
 \usepackage{graphicx}
@@ -12,10 +13,10 @@
 
 \title{MAC0216 --- Técnicas de Programação\\Relatório Técnico do Trabalho Prático 1}
 \author{
-    Ezequiel Gomes de Carvalho - 15510880 \\
-    Igor Nascimento Silva - 17076671 \\
-    Lucas Pires da Silva - 16885060 \\
-    Miguel da Silva Damasceno - 17838677
+    Ezequiel Gomes de Carvalho -- 15510880 \\
+    Igor Nascimento Silva -- 17076671 \\
+    Lucas Pires da Silva -- 16885060 \\
+    Miguel da Silva Damasceno -- 17838677
 }
 \date{\textit{\small{\today}}}
 
@@ -24,7 +25,7 @@
 \maketitle
 
 \section{Introdução}
-A construção do Cbuild - Uma ferramenta de automatização para projetos em c - foi o foco desse trabalho, feito em script (Bash) com conceitos de versionamento de código, moduralização lógica através de funções e tratametnos de erros.
+A construção do Cbuild - Uma ferramenta de automatização para projetos em c - foi o foco desse trabalho, feito em script (Bash) com conceitos de versionamento de código, moduralização lógica através de funções e tratametnos de erros. O Github do projeto e o vídeo de demonstração estão disponíveis em \href{https://github.com/Kisecawchuck/TP1.cbuild}{Kisecawchuck/TP1.cbuild} e \href{https://drive.google.com/file/d/1fmye1a4HEJhPrriKJLhj_LTTRpnZDLWe/view?usp=drivesdk}{Vídeo de Demonstração}.
 
 \section{Estrutura}
 
@@ -66,6 +67,7 @@ necessários existam e que haja código-fonte a ser compilado.
 \begin{itemize}
     \item \texttt{2}: \texttt{CC} não está instalado
     \item \texttt{3}: Não há arquivos de código-fonte válidos
+    \item \texttt{6}: Houve um erro durante a compilação
 \end{itemize}
 
 A estratégia de descoberta de arquivos de forma recursiva  sobre todos os arquivos de origem. Cada arquivo \texttt{.c} é compilado individualmente para um arquivo objeto \texttt{.o} dentro do diretório \texttt{build/}.
@@ -124,13 +126,10 @@ realizada somente quando pelo menos um arquivo-fonte tiver sido
 recompilado. Caso nenhum arquivo tenha sido modificado desde a última
 compilação, a etapa de linkagem é omitida.
 
-A função retorna os códigos de erro \texttt{2} e \texttt{3}, utilizados
-também pelo comando \texttt{build}, respectivamente quando o compilador
-definido em \texttt{CC} não é encontrado ou quando não há arquivos de
-código-fonte válidos no projeto.
+A função retorna os códigos de erro \texttt{2}, \texttt{3}, \texttt{6} utilizados também pelo comando \texttt{build}, respectivamente quando o compilador definido em \texttt{CC} não é encontrado ou quando não há arquivos de código-fonte válidos no projeto. Com adição do código de erro \texttt{7}, quando o comando \texttt{rebuild} é executado sem uma compilação anterior.
 
 \subsection{info}
-O comando \texttt{info} coleta e exibe metadados vitais do projeto. A estratégia de contagem de arquivos e das Linhas de Código utiliza os comandos \texttt{find} acoplados ao utilário \texttt{wc -l}. O script processa de forma recursiva os diretórios \texttt{src/} e \texttt{include/}, lidando de forma segura com diretórios vazios. 
+O comando \texttt{info} coleta e exibe metadados vitais do projeto. A estratégia de contagem de arquivos e das Linhas de Código utiliza os comandos \texttt{find} acoplados ao utilário \texttt{wc -l}; linhas vazias, comentários e diretivas de pré-processamento são contabilizados. O script processa de forma recursiva os diretórios \texttt{src/} e \texttt{include/}, lidando de forma segura com diretórios vazios. 
 
 Além das estatísticas de código, a função obtém o tamanho em disco do executável utilizando \texttt{du -h} e extrai as datas da última compilação e da última execução (através de um arquivo de controle gerado no momento do \texttt{run}). Todos esses dados são exibidos na saída padrão e exportados para um arquivo texto consolidado dentro da pasta \texttt{relatorios/}.
 
