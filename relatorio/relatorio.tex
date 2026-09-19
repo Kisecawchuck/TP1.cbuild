@@ -215,7 +215,7 @@ Executa o comando \texttt{comando\_exec} e redireciona sua saída para dois cana
 codigo_retorno=${PIPESTATUS[0]}
 \end{verbatim}
 
-\texttt{PIPESTATUS} é um array que guarda a saída de retorno do comando executado pelo \texttt{tee} em \texttt{PIPESTATUS[0]} e a saída de retorno do próprio \texttt{tee} em \texttt{PIPESTATUS[1]}. As saídas de retorno dizem se o comando foi executado corretamente com base em um determinado código; 0 indica que ele foi executado corretamente.
+PIPESTATUS é um array que guarda a saída de retorno dos últimos comandos executados no terminal rodando em primeiro plano, assim o retorno do comando executado está em PIPESTATUS[0]  e a saída de retorno do próprio tee em PIPESTATUS[1]. As saídas de retorno dizem se o comando foi executado corretamente com base em um determinado código, 0 indica que ele foi executado corretamente. 
 
 \begin{verbatim}
 inicio=$(date +%s.%N)
