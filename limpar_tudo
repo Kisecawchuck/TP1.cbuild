@@ -15,7 +15,7 @@ for t in ${TESTES[@]}; do
     CFLAGS='-Wall -Werror'\n" > cbuild.conf
 
     ./cbuild clean
-    rm $t/logs/*
-    rm $t/build/.*
+    rm -f $t/logs/*
+    rm -f $t/build/.*
 done
 
