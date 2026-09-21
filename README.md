@@ -95,11 +95,11 @@ Os dados são exibidos na saída padrão e exportados para `relatorios/`.
 
 Ativados via flags na linha de comando:
 
-\`\`\`bash
+```bash
 ./cbuild -V build       # modo verbose
 ./cbuild -D build       # modo debug
 ./cbuild -r "args" run  # passa argumentos ao executável
-\`\`\`
+```
 
 - **`verbose_mode()`** — ativa impressão de comandos (`set -v`) até `end_mode()` ser chamado.
 - **`debug_mode()`** — ativa rastreamento de execução (`set -x`) até `end_mode()` ser chamado.
